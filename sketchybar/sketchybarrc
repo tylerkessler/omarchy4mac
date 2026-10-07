@@ -90,7 +90,7 @@ sketchybar --add item spotify left \
                  icon="" \
                  icon.color="$GREEN" \
                  label.color="$FG" \
-                 label.max_chars=18 \
+                 label.max_chars=32 \
                  scroll_texts=on \
                  label.scroll_duration=200 \
                  background.drawing=off \
@@ -153,16 +153,6 @@ sketchybar --add item updates center \
                  click_script="open -na Ghostty --args -e $HOME/.local/bin/omarchy-tui sh -c 'brew update && brew upgrade'" \
            --subscribe updates system_woke display_change
 
-# Current theme name — label re-reads on every `sketchybar --reload`, which the
-# `theme` script fires after each switch. Click = shuffle (theme random).
-sketchybar --add item theme_name center \
-           --set theme_name \
-                 icon="󰏘" \
-                 icon.color="$YELLOW" \
-                 label="$(cat "$HOME/.config/theme-switcher/current" 2>/dev/null || echo "?")" \
-                 label.color="$FG" \
-                 click_script="$HOME/.local/bin/theme random"
-
 # Stand-up / sit-down state, centre copy: shows on the external displays next to
 # the centred theme name. Added straight after theme_name so it lands beside it.
 # The right-cluster copy (standup) covers the built-in panel. One plugin drives
@@ -176,16 +166,23 @@ sketchybar --add item standup_center center \
                  background.drawing=off \
                  script="$PLUGIN_DIR/standup.sh"
 
-# v4 bar order, left to right: agents · bluetooth · network · audio · power.
+# v4 bar order, left to right: agents · power. (Wi-Fi, Bluetooth, volume and theme hidden by choice.)
 # Right items lay out right-to-left in add order, so battery goes first.
 sketchybar --add item battery right \
            --set battery \
-                 update_freq=120 \
+                 update_freq=10 \
                  icon.color="$GREEN" \
                  label.color="$FG" \
                  script="$PLUGIN_DIR/battery.sh" \
                  click_script='open "x-apple.systempreferences:com.apple.Battery-Settings.extension"' \
            --subscribe battery system_woke power_source_change
+
+# Power in / out / battery watts, coloured separately. battery.sh fills them.
+# Added right after battery so they read "in · out · batt" just left of it.
+for item in power_batt power_out power_in; do
+  sketchybar --add item "$item" right \
+             --set "$item" icon.drawing=off label.padding_left=2 label.padding_right=2 padding_left=0 padding_right=0
+done
 
 # Right-side clock + theme name — the leftmost pair of the right cluster, i.e.
 # immediately in front of the battery. These are the built-in display's variant:
@@ -195,14 +192,6 @@ sketchybar --add item battery right \
 # Right-side items are laid out right-to-left in the order they're added, so
 # theme_name_right must be added BEFORE clock_right to end up on its right —
 # preserving the same clock-then-theme reading order as the centered pair.
-sketchybar --add item theme_name_right right \
-           --set theme_name_right \
-                 drawing=off \
-                 icon="󰏘" \
-                 icon.color="$YELLOW" \
-                 label.color="$FG" \
-                 click_script="$HOME/.local/bin/theme random"
-
 # Stand-up / sit-down state of the interval timer (~/.hermes/standup_timer.sh).
 # Added straight after theme_name_right so it draws immediately to the LEFT of the
 # theme name (right items lay out right-to-left in add order). Icon only: a chair
@@ -225,27 +214,6 @@ sketchybar --add item clock_right right \
                  click_script='open "x-apple.systempreferences:com.apple.Date-Time-Settings.extension"'
 
 
-sketchybar --add item volume right \
-           --set volume \
-                 update_freq=5 \
-                 icon.color="$CYAN" \
-                 label.color="$FG" \
-                 script="$PLUGIN_DIR/volume.sh" \
-                 click_script='open "x-apple.systempreferences:com.apple.Sound-Settings.extension"' \
-           --subscribe volume volume_change
-
-sketchybar --add item wifi right \
-           --set wifi \
-                 update_freq=30 \
-                 script="$PLUGIN_DIR/wifi.sh" \
-                 click_script='open "x-apple.systempreferences:com.apple.wifi-settings-extension"'
-
-sketchybar --add item bluetooth right \
-           --set bluetooth \
-                 update_freq=60 \
-                 script="$PLUGIN_DIR/bluetooth.sh" \
-                 click_script='open "x-apple.systempreferences:com.apple.BluetoothSettings"'
-
 # Coding-agent usage: today's Claude Code spend, hidden at zero (v4 bar).
 sketchybar --add item agents right \
            --set agents \
@@ -259,8 +227,6 @@ sketchybar --update
 sketchybar --trigger aerospace_workspace_change \
   FOCUSED_WORKSPACE="$(aerospace list-workspaces --focused 2>/dev/null)"
 
-# Volume only subscribes to volume_change events, so prime it on startup
-NAME=volume bash "$PLUGIN_DIR/volume.sh"
 
 # Prime front_app on startup with the currently focused app name
 FRONT_APP="$(osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true' 2>/dev/null)"

@@ -2,6 +2,7 @@
 #
 # theme — unified theme switcher for Ghostty + Neovim (LazyVim),
 #         driven by Omarchy's own theme definitions.
+#         Grok follows the Ghostty palette (terminal theme) on every switch.
 #
 # Usage:
 #   theme                 show current theme + list installed
@@ -497,6 +498,48 @@ apply_hermes() {
   echo "  ${c_dim}hermes${c_rst}   → $skin"
 }
 
+# Grok has no custom-palette file. `terminal` paints with Ghostty's colors,
+# which this switcher already rewrote, so every Omarchy theme reaches it.
+# New sessions pick it up. ~/.grok/config.toml keeps the rest of its keys.
+apply_grok() {
+  local cfg="$HOME/.grok/config.toml"
+  [[ -f "$cfg" && -x "$HOME/.grok/bin/grok" ]] || return 0
+  CFG="$cfg" python3 - <<'PY'
+import os, re
+p = os.environ["CFG"]
+text = open(p).read()
+
+def ensure(text, section, key, value):
+    lines = text.splitlines(keepends=True)
+    if lines and not lines[-1].endswith("\n"):
+        lines[-1] += "\n"
+    header = f"[{section}]"
+    start = next((i for i, line in enumerate(lines) if line.strip() == header), None)
+    if start is None:
+        extra = "" if (not lines or lines[-1].endswith("\n\n") or text.endswith("\n\n")) else "\n"
+        return "".join(lines) + f"{extra}[{section}]\n{key} = {value}\n"
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        s = lines[j].strip()
+        if s.startswith("[") and s.endswith("]") and not s.startswith("[["):
+            end = j
+            break
+    key_re = re.compile(rf"^(\s*){re.escape(key)}\s*=")
+    for j in range(start + 1, end):
+        m = key_re.match(lines[j])
+        if m:
+            lines[j] = f"{m.group(1)}{key} = {value}\n"
+            return "".join(lines)
+    lines.insert(start + 1, f"{key} = {value}\n")
+    return "".join(lines)
+
+text = ensure(text, "features", "terminal_theme", "true")
+text = ensure(text, "ui", "theme", '"terminal"')
+open(p, "w").write(text if text.endswith("\n") else text + "\n")
+PY
+  echo "  ${c_dim}grok${c_rst}     → terminal ${c_dim}(new sessions, follows Ghostty)${c_rst}"
+}
+
 # Claude Code: ~/.claude/themes/omarchy.json + settings theme "custom:omarchy"
 # (what omarchy-theme-set-claude --activate does). New sessions pick it up.
 apply_claude() {
@@ -552,7 +595,8 @@ apply_wallpaper() {
   shopt -s nullglob nocaseglob
   local files=( "$dir/${name}_"*.{jpg,jpeg,png,heic,webp} )
   shopt -u nocaseglob
-  [[ ${#files[@]} -eq 0 ]] && { echo "  ${c_yel}wallpaper${c_rst} ! none found for '$name' in $dir — skipped"; return 0; }
+  # bash 3.2 + set -u: ${#files[@]} on an empty array is "unbound", so test the join.
+  [[ -z "${files[*]-}" ]] && { echo "  ${c_yel}wallpaper${c_rst} ! none found for '$name' in $dir — skipped"; return 0; }
 
   # If current desktop picture is already from this theme, keep it
   local current; current="$(osascript -e 'tell application "System Events" to tell current desktop to get picture' 2>/dev/null)"
@@ -640,6 +684,7 @@ apply_btop "$name"
 apply_sketchybar "$name"
 apply_claude "$name"
 apply_hermes "$name"
+apply_grok "$name"
 apply_obsidian "$name"
 apply_wallpaper "$name"
 mkdir -p "$(dirname "$STATE")"; echo "$name" > "$STATE"
