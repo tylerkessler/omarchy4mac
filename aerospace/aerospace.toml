@@ -8,9 +8,9 @@ start-at-login = false
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
-# Accordion: focused window full width, other windows collapse to edge strips.
-# Cycle with cmd-backtick. alt-a toggles a workspace back to tiles.
-default-root-container-layout = 'accordion'
+# Tiles: every window stays on screen. Accordion (alt-a) collapses
+# unfocused windows to edge strips. Cycle windows with cmd-backtick.
+default-root-container-layout = 'tiles'
 default-root-container-orientation = 'auto'
 
 on-focused-monitor-changed = [
@@ -133,8 +133,10 @@ cmd-shift-backtick = 'focus --boundaries-action wrap-around-the-workspace dfs-pr
 # Web apps open as Brave app windows (`--app=<url>`), the way Omarchy launches
 # them (bin/omarchy-launch-webapp): a window of their own that tiles, not a
 # tab. `-n` is required: a running Brave drops --args otherwise.
-alt-enter = 'exec-and-forget open -na Ghostty'
-cmd-alt-enter = 'exec-and-forget open -na Ghostty --args -e tmux'
+# One Ghostty window running tmux session "main" (tyler-os dotfiles/tmux).
+# alt-enter focuses it; cmd-alt-enter adds a tmux tab instead of a macOS tab.
+alt-enter = 'exec-and-forget open -a Ghostty'
+cmd-alt-enter = 'exec-and-forget /opt/homebrew/bin/tmux new-window -t main: -c $HOME; open -a Ghostty'
 cmd-ctrl-enter = 'exec-and-forget open -na Ghostty --args -e herdr'
 cmd-shift-enter = 'exec-and-forget open -a "Brave Browser"'
 cmd-shift-alt-b = 'exec-and-forget open -na "Brave Browser" --args --incognito'
@@ -193,7 +195,7 @@ cmd-ctrl-period = 'exec-and-forget open -a HandBrake'
 # ---------- Omarchy v4 utilities ----------
 cmd-ctrl-e = 'exec-and-forget open "raycast://extensions/raycast/emoji-symbols/search-emoji-symbols"'   # emoji picker
 cmd-ctrl-q = 'exec-and-forget open -a Calculator'                                                       # v4: Omacalc
-# Coding agent in a fresh terminal (v4: Super+Shift+Ctrl+A), see bin/omarchy-agent.
+# Claude in a fresh terminal (v4 coding-agent key: Super+Shift+Ctrl+A), see bin/omarchy-agent.
 cmd-shift-ctrl-a = 'exec-and-forget open -na Ghostty --args -e $HOME/.local/bin/omarchy-agent'
 # Zoom (v4: Super+Ctrl+Z): fires macOS accessibility zoom (⌥⌘8). Needs
 # System Settings › Accessibility › Zoom › "Use keyboard shortcuts to zoom".
@@ -301,3 +303,10 @@ run = 'layout tiling'
 if.app-id = 'com.mitchellh.ghostty'
 if.window-title-regex-substring = 'org.omarchy.screensaver'
 run = 'layout floating'
+
+# Ghostty native tabs show up as extra AX windows. Ghostty's documented
+# AeroSpace workaround is to force tiling; floating them detaches the tab.
+# https://ghostty.org/docs/help/macos-tiling-wms
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = ['layout tiling']

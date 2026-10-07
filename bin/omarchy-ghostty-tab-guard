@@ -1,0 +1,17 @@
+#!/bin/bash
+# Ghostty uses native macOS tabs. AeroSpace sees each tab as an AXWindow
+# and would otherwise tile it as a second pane on ⌘T.
+# Keep the first Ghostty window tiled; float extras (tabs).
+# https://ghostty.org/docs/help/macos-tiling-wms
+set -euo pipefail
+AERO="/opt/homebrew/bin/aerospace"
+id="${AEROSPACE_WINDOW_ID:-}"
+sleep 0.08
+n="$("$AERO" list-windows --monitor all --app-bundle-id com.mitchellh.ghostty --count 2>/dev/null || echo 0)"
+if [ "${n:-0}" -gt 1 ]; then
+  if [ -n "$id" ]; then
+    "$AERO" layout floating --window-id "$id"
+  else
+    "$AERO" layout floating
+  fi
+fi
