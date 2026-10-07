@@ -1,6 +1,9 @@
 #!/bin/zsh
 # Coding agent in a fresh terminal (v4: Super+Shift+Ctrl+A). One argument-free
 # entry point: Ghostty drops `-e` arguments when other flags precede them.
-export PATH="$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+# Grok paints with the Ghostty palette, so an Omarchy theme switch is its theme.
+export PATH="$HOME/.grok/bin:$HOME/.local/bin:$HOME/.bun/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+export GROK_TERMINAL_THEME=1
+export GROK_THEME=terminal
 cd "$HOME/code" || exit 1
 exec claude

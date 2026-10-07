@@ -2,6 +2,10 @@
 # Source this from ~/.zshrc. Needs: eza bat fzf zoxide (brew install).
 
 # ---- Omarchy 4 shell defaults (ported from default/bash/aliases + envs) ----
+export PATH="$HOME/.grok/bin:$PATH"
+# Grok follows Ghostty, which Omarchy already themes. New sessions pick this up.
+export GROK_TERMINAL_THEME=1
+export GROK_THEME=terminal
 export EDITOR="${EDITOR:-nvim}"
 export BAT_THEME=ansi
 export MANROFFOPT="-c"
@@ -68,17 +72,27 @@ _herdr_split() {
     jq -r '.result.pane.pane_id'
 }
 
+# Short names for hdl / hdlm. Anything else is executed as typed (`hdl grok`).
+_omarchy_ai() {
+  case "$1" in
+    g|grok) print -r -- grok ;;
+    c|claude) print -r -- claude ;;
+    "") ;;
+    *) print -r -- "$1" ;;
+  esac
+}
+
 # Create a Herdr Dev Layout with editor, ai, and terminal
-# Usage: hdl <c|cx|codex|other_ai> [<second_ai>]
+# Usage: hdl <g|grok|c|claude|cmd> [<second_ai>]
 hdl() {
   emulate -L ksh
-  [[ -z $1 ]] && { echo "Usage: hdl <c|cx|codex|other_ai> [<second_ai>]"; return 1; }
+  [[ -z $1 ]] && { echo "Usage: hdl <g|grok|c|claude|cmd> [<second_ai>]"; return 1; }
   [[ -z $HERDR_PANE_ID ]] && { echo "You must start herdr to use hdl."; return 1; }
 
   local current_dir="${PWD}"
   local editor_pane ai_pane ai2_pane
-  local ai="$1"
-  local ai2="${2:-}"
+  local ai="$(_omarchy_ai "$1")"
+  local ai2="$(_omarchy_ai "${2:-}")"
 
   # Use HERDR_PANE_ID for the pane we're running in (stable even if focus moves)
   editor_pane="$HERDR_PANE_ID"
@@ -129,14 +143,14 @@ hds() {
 }
 
 # Create multiple hdl tabs with one per subdirectory in the current directory
-# Usage: hdlm <c|cx|codex|other_ai> [<second_ai>]
+# Usage: hdlm <g|grok|c|claude|cmd> [<second_ai>]
 hdlm() {
   emulate -L ksh
-  [[ -z $1 ]] && { echo "Usage: hdlm <c|cx|codex|other_ai> [<second_ai>]"; return 1; }
+  [[ -z $1 ]] && { echo "Usage: hdlm <g|grok|c|claude|cmd> [<second_ai>]"; return 1; }
   [[ -z $HERDR_PANE_ID ]] && { echo "You must start herdr to use hdlm."; return 1; }
 
-  local ai="$1"
-  local ai2="${2:-}"
+  local ai="$(_omarchy_ai "$1")"
+  local ai2="$(_omarchy_ai "${2:-}")"
   local base_dir="$PWD"
   local first=true
   local hdl_command

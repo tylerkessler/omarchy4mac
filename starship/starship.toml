@@ -1,23 +1,47 @@
-# Starship prompt — minimal Tokyo Night
-# https://starship.rs/config/
+# Starship — DHH Omarchy shape + Tokyo Night (matches Ghostty omarchy-tokyo-night)
+# Repo name is the git root; GitHub owner/repo comes from origin (local parse, no API).
+# https://starship.rs/config/  ·  basecamp/omarchy config/starship.toml
 
 add_newline = false
+command_timeout = 200
 
-format = "$directory$git_branch$git_status$cmd_duration$character"
+format = "$directory$git_branch$git_status$custom$cmd_duration$character"
 
 [directory]
-style = "bold #7aa2f7"
-truncation_length = 3
+style = "#7aa2f7"
+truncation_length = 2
 truncation_symbol = "…/"
+repo_root_style = "bold #7aa2f7"
+repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
+read_only = "🔒"
 
 [git_branch]
-symbol = " "
-style = "#bb9af7"
-format = "[on $symbol$branch ]($style)"
+symbol = " "
+style = "italic #bb9af7"
+format = "[$symbol$branch]($style) "
 
 [git_status]
 style = "#e0af68"
-format = "[$all_status$ahead_behind ]($style)"
+format = '([$all_status$ahead_behind]($style) )'
+ahead = "⇡${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+behind = "⇣${count}"
+conflicted = ""
+untracked = "?"
+modified = "!"
+stashed = ""
+staged = "+"
+renamed = "»"
+deleted = "✘"
+
+[custom.github]
+description = "GitHub owner/repo from origin"
+command = "git remote get-url origin 2>/dev/null | sed -E -e 's#.*github.com[:/]##' -e 's#\\.git$##'"
+when = "git remote get-url origin 2>/dev/null | grep -Fq github.com"
+format = "[ $output]($style) "
+style = "bold #7dcfff"
+shell = ["sh"]
+disabled = false
 
 [cmd_duration]
 min_time = 2000
@@ -25,5 +49,5 @@ style = "#565f89"
 format = "[took $duration ]($style)"
 
 [character]
-success_symbol = "[➜](bold #9ece6a)"
-error_symbol = "[➜](bold #f7768e)"
+success_symbol = "[❯](bold #9ece6a)[❯](bold #e0af68)[❯](bold #7aa2f7)"
+error_symbol = "[✗](bold #f7768e)"
