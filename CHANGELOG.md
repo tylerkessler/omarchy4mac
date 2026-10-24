@@ -6,6 +6,9 @@ built. Entries that are not a dotfiles sync say so.
 
 ## 2026-10-23
 
+- SketchyBar pills float: the full-width midnight tube and pink neon edge are
+  gone. Groups are rounded filled capsules with no outline. AeroSpace
+  `outer.top` is 50 so windows sit under the floating strip.
 - SketchyBar chrome is now TKOS Live Midnight Tokyo / Miami Vice: midnight navy
   bar, cyan workspace + app pill, mint Spotify pill, hot-pink status pill and
   bar edge. Palette lives in `sketchybar/live_vibe.sh` and survives a `theme`
