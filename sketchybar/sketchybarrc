@@ -7,23 +7,26 @@ source "$CONFIG_DIR/colors.sh"
 source "$CONFIG_DIR/live_vibe.sh"
 
 # ---------- Bar ----------
-# Midnight navy tube, pink neon edge. Window borders stay cyan (Vice split).
+# Invisible strip. The rounded pills (brackets below) are the chrome.
+# No full-width fill, no pink rectangle, no bar shadow.
 sketchybar --bar \
   position=top \
-  height=42 \
-  blur_radius=48 \
-  color="$BG_TRANS" \
-  border_color="$PINK" \
-  border_width=1 \
-  padding_left=10 \
-  padding_right=10 \
-  margin=0 \
+  height=36 \
+  y_offset=6 \
+  margin=10 \
+  blur_radius=0 \
+  color=0x00000000 \
+  border_color=0x00000000 \
+  border_width=0 \
+  corner_radius=0 \
+  padding_left=8 \
+  padding_right=8 \
   notch_width=200 \
   display=all \
   topmost=on \
   sticky=on \
   show_in_fullscreen=on \
-  shadow=on
+  shadow=off
 
 # ---------- Defaults ----------
 default=(
@@ -265,38 +268,27 @@ sketchybar --add item agents right \
                  script="$PLUGIN_DIR/agents.sh" \
                  click_script="open -na Ghostty --args -e $HOME/.local/bin/omarchy-tui bunx ccusage daily"
 
-# ---------- Vice pills: cyan left, mint music, pink right ----------
+# ---------- Floating pills: fill only, no neon outline ----------
+_PILL=(
+  background.color="$BG_PILL"
+  background.corner_radius=14
+  background.height=28
+  background.border_width=0
+  background.shadow.drawing=on
+  background.shadow.distance=3
+  background.shadow.color=0x66000000
+)
 sketchybar --add bracket vibe_left space.1 space.2 space.3 space.4 space.5 space_sep front_app \
-           --set vibe_left \
-                 background.color="$BG_PILL" \
-                 background.corner_radius=12 \
-                 background.height=30 \
-                 background.border_width=1 \
-                 background.border_color="$ACCENT"
+           --set vibe_left "${_PILL[@]}"
 
 sketchybar --add bracket vibe_music spotify spotify_next spotify_star \
-           --set vibe_music \
-                 background.color="$BG_PILL" \
-                 background.corner_radius=12 \
-                 background.height=30 \
-                 background.border_width=1 \
-                 background.border_color="$MINT"
+           --set vibe_music "${_PILL[@]}"
 
 sketchybar --add bracket vibe_center clock weather standup_center \
-           --set vibe_center \
-                 background.color="$BG_PILL" \
-                 background.corner_radius=12 \
-                 background.height=30 \
-                 background.border_width=1 \
-                 background.border_color="$PINK"
+           --set vibe_center "${_PILL[@]}"
 
 sketchybar --add bracket vibe_right agents clock_right standup power_in power_out power_batt battery \
-           --set vibe_right \
-                 background.color="$BG_PILL" \
-                 background.corner_radius=12 \
-                 background.height=30 \
-                 background.border_width=1 \
-                 background.border_color="$PINK"
+           --set vibe_right "${_PILL[@]}"
 
 # ---------- Force first run ----------
 sketchybar --update

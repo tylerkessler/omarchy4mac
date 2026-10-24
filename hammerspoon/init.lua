@@ -598,11 +598,11 @@ end
 ----------------------------------------------------------------------
 -- Reveal the macOS menu bar under SketchyBar.
 -- Pointer at the top edge (y <= 2) hides SketchyBar so the auto-hiding
--- menu bar can drop. Pointer staying below the menu-bar band (y > 40)
+-- menu bar can drop. Pointer staying below the menu-bar band (y > 48)
 -- for ~300ms shows SketchyBar again. Same in fullscreen.
 ----------------------------------------------------------------------
 local SKETCHY = "/opt/homebrew/bin/sketchybar"
-local TOP_EDGE, SHOW_BELOW, SHOW_HOLD = 2, 40, 0.3
+local TOP_EDGE, SHOW_BELOW, SHOW_HOLD = 2, 48, 0.3
 
 local barHidden = false
 local showTimer = nil

@@ -41,7 +41,7 @@ inner.horizontal = 8
 inner.vertical = 8
 outer.left = 8
 outer.bottom = 8
-outer.top = 40   # 32 (SketchyBar height) + 8 (visual gap)
+outer.top = 50   # SketchyBar y_offset 6 + height 36 + 8 visual gap
 outer.right = 8
 
 [mode.main.binding]
@@ -65,7 +65,7 @@ alt-j = 'layout tiles horizontal vertical'
 # Toggle it per workspace; cycle windows with the normal focus keys.
 alt-a = 'layout accordion tiles'
 
-# AeroSpace fullscreen keeps outer.top (40 = SketchyBar 32 + 8) so the bar stays
+# AeroSpace fullscreen keeps outer.top (50 = SketchyBar 6+36 + 8) so the bar stays
 # visible. Native macOS fullscreen (own Space) puts the window at y=0 under the
 # bar; Ctrl+Cmd+F is remapped to AeroSpace fullscreen. Default fullscreen
 # respects outer gaps; do not pass --no-outer-gaps here.
