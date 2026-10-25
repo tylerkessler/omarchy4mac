@@ -40,7 +40,7 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 inner.horizontal = 8
 inner.vertical = 8
 outer.left = 8
-outer.bottom = 36  # Bottom ticker y_offset 2 + height 24 + 10 visual gap
+outer.bottom = 94  # Bottom ticker height 84 + 10 visual gap (Digit #los-ticker)
 outer.top = 50   # SketchyBar y_offset 6 + height 36 + 8 visual gap
 outer.right = 8
 
