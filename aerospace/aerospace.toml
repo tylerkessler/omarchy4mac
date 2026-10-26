@@ -69,7 +69,9 @@ alt-a = 'layout accordion tiles'
 # visible. Native macOS fullscreen (own Space) puts the window at y=0 under the
 # bar; Ctrl+Cmd+F is remapped to AeroSpace fullscreen. Default fullscreen
 # respects outer gaps; do not pass --no-outer-gaps here.
-# Exception: the green traffic-light button still triggers native fullscreen.
+# The green traffic-light button and app fullscreen keys still ask for native
+# fullscreen; tyler-os dotfiles/hammerspoon/fullscreen_guard.lua turns that into
+# this AeroSpace fullscreen, so nothing covers the bottom ticker (tyler-os #1104).
 alt-f = 'fullscreen'
 cmd-alt-f = 'fullscreen'
 cmd-ctrl-f = 'fullscreen'
