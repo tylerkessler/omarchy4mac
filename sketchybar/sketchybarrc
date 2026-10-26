@@ -293,7 +293,7 @@ sketchybar --add bracket vibe_right agents clock_right standup power_in power_ou
 # ---------- Force first run ----------
 sketchybar --update
 sketchybar --trigger aerospace_workspace_change \
-  FOCUSED_WORKSPACE="$(aerospace list-workspaces --focused 2>/dev/null)"
+  FOCUSED_WORKSPACE="$(/usr/bin/perl -e 'alarm 1; exec @ARGV' /opt/homebrew/bin/aerospace list-workspaces --focused 2>/dev/null)"
 
 
 # Prime front_app on startup with the currently focused app name

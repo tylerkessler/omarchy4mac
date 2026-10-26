@@ -6,7 +6,8 @@
 source "$CONFIG_DIR/colors.sh"
 
 SID="${NAME#space.}"
-FOCUSED="${FOCUSED_WORKSPACE:-$(/opt/homebrew/bin/aerospace list-workspaces --focused 2>/dev/null)}"
+# A hung AeroSpace must not leave this script waiting forever: 1 s limit (macOS has no `timeout`).
+FOCUSED="${FOCUSED_WORKSPACE:-$(/usr/bin/perl -e 'alarm 1; exec @ARGV' /opt/homebrew/bin/aerospace list-workspaces --focused 2>/dev/null)}"
 
 # Ctrl+Left/Right switches native macOS Spaces, which AeroSpace never reports.
 # space_change carries the new Space number in $INFO ({"display-1": 2}, per display).
