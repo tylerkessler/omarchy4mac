@@ -654,3 +654,13 @@ hs.urlevent.bind("tab", function(_, params)
   hs.execute(string.format("/opt/homebrew/bin/tmux select-window -t TKOS:%d", n))
   hs.application.launchOrFocus("Ghostty")
 end)
+
+-- TKOS modules from tyler-os (tab-dot tooltips, fullscreen-above-the-ticker guard) are loaded by tkos-boot at login.
+-- A Hammerspoon reload wipes them, so load them again here when they exist (tylerkessler/tyler-os#1104).
+for _, name in ipairs({ "tab_tooltips", "fullscreen_guard" }) do
+  local path = os.getenv("HOME") .. "/Scripts/tyler-os-live/dotfiles/hammerspoon/" .. name .. ".lua"
+  if hs.fs.attributes(path) then
+    local ok, err = pcall(dofile, path)
+    if not ok then print("TKOS module " .. name .. " failed: " .. tostring(err)) end
+  end
+end
