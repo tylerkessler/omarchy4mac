@@ -111,7 +111,8 @@ sketchybar --add item front_app left \
            --subscribe front_app front_app_switched
 
 # ---------- Spotify (now-playing marquee) ----------
-# Instant updates via Spotify's distributed notification; update_freq is a fallback.
+# Event-driven, never polled: Spotify's own distributed notification (its userInfo arrives in $INFO) and
+# SketchyBar's media_change. A 5 s poll here ran osascript into a hung Spotify and piled up 100+ stuck processes.
 sketchybar --add event spotify_change "com.spotify.client.PlaybackStateChanged"
 sketchybar --add item spotify left \
            --set spotify \
@@ -123,10 +124,9 @@ sketchybar --add item spotify left \
                  scroll_texts=on \
                  label.scroll_duration=200 \
                  background.drawing=off \
-                 update_freq=5 \
                  script="$PLUGIN_DIR/spotify.sh" \
                  click_script="osascript -e 'tell application \"Spotify\" to playpause'" \
-           --subscribe spotify spotify_change
+           --subscribe spotify spotify_change media_change
 
 # Next-track button (shown/hidden together with the marquee by spotify.sh)
 sketchybar --add item spotify_next left \
@@ -297,7 +297,8 @@ sketchybar --trigger aerospace_workspace_change \
 
 
 # Prime front_app on startup with the currently focused app name
-FRONT_APP="$(osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true' 2>/dev/null)"
+# 2 s limit: a pending Automation prompt or a busy System Events must not hang the whole config load.
+FRONT_APP="$(/usr/bin/perl -e 'alarm 2; exec @ARGV' /usr/bin/osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true' 2>/dev/null)"
 NAME=front_app SENDER=front_app_switched INFO="$FRONT_APP" bash "$PLUGIN_DIR/front_app.sh"
 
 # Prime Spotify marquee on startup
