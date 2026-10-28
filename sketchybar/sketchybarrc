@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# SketchyBar — TKOS Live, Midnight Tokyo / Miami Vice
+# SketchyBar — TKOS Live, the TKOS sunset: dusk-plum islands, orange → pink → magenta → violet
 # Reload: brew services restart sketchybar  (or: sketchybar --reload)
 
 PLUGIN_DIR="$CONFIG_DIR/plugins"
@@ -213,19 +213,29 @@ sketchybar --add item standup_center center \
 # Right items lay out right-to-left in add order, so battery goes first.
 sketchybar --add item battery right \
            --set battery \
-                 update_freq=10 \
-                 icon.color="$GREEN" \
+                 update_freq=2 \
+                 icon.font="Hack Nerd Font:Bold:16.0" \
+                 icon.padding_right=2 \
                  label.color="$FG" \
                  script="$PLUGIN_DIR/battery.sh" \
-                 click_script='open "x-apple.systempreferences:com.apple.Battery-Settings.extension"' \
+                 click_script="$PLUGIN_DIR/battery_click.sh" \
            --subscribe battery system_woke power_source_change
 
-# Power in / out / battery watts, coloured separately. battery.sh fills them.
-# Added right after battery so they read "in · out · batt" just left of it.
-for item in power_batt power_out power_in; do
-  sketchybar --add item "$item" right \
-             --set "$item" icon.drawing=off label.padding_left=2 label.padding_right=2 padding_left=0 padding_right=0
-done
+# Power flow, just left of the battery: watts + a dot travelling into the battery (charging) or out of it (on battery).
+# battery.sh fills it; a click opens the same terminal as the battery.
+sketchybar --add item power_flow right \
+           --set power_flow \
+                 drawing=off \
+                 icon.font="Hack Nerd Font:Bold:12.0" \
+                 icon.padding_left=8 \
+                 icon.padding_right=2 \
+                 icon.shadow.drawing=off \
+                 label.font="Hack Nerd Font:Bold:13.0" \
+                 label.padding_left=0 \
+                 label.padding_right=0 \
+                 padding_left=0 \
+                 padding_right=0 \
+                 click_script="$PLUGIN_DIR/battery_click.sh"
 
 # Right-side clock + theme name — the leftmost pair of the right cluster, i.e.
 # immediately in front of the battery. These are the built-in display's variant:
@@ -268,27 +278,29 @@ sketchybar --add item agents right \
                  script="$PLUGIN_DIR/agents.sh" \
                  click_script="open -na Ghostty --args -e $HOME/.local/bin/omarchy-tui bunx ccusage daily"
 
-# ---------- Floating pills: fill only, no neon outline ----------
+# ---------- Islands: the ticker's sunset pills ----------
+# Dusk-plum fill, a soft hairline in one sunset stop per island, left to right: orange, pink, magenta, violet.
+# Light themes skip live_vibe.sh, so each colour falls back to the theme's own.
 _PILL=(
-  background.color="$BG_PILL"
+  background.color="${PLUM:-$BG_PILL}"
   background.corner_radius=14
   background.height=28
-  background.border_width=0
+  background.border_width=1
   background.shadow.drawing=on
   background.shadow.distance=3
   background.shadow.color=0x66000000
 )
 sketchybar --add bracket vibe_left space.1 space.2 space.3 space.4 space.5 space_sep front_app \
-           --set vibe_left "${_PILL[@]}"
+           --set vibe_left "${_PILL[@]}" background.border_color="${HAIR_1:-$OVERLAY}"
 
 sketchybar --add bracket vibe_music spotify spotify_next spotify_star \
-           --set vibe_music "${_PILL[@]}"
+           --set vibe_music "${_PILL[@]}" background.border_color="${HAIR_2:-$OVERLAY}"
 
 sketchybar --add bracket vibe_center clock weather standup_center \
-           --set vibe_center "${_PILL[@]}"
+           --set vibe_center "${_PILL[@]}" background.border_color="${HAIR_3:-$OVERLAY}"
 
-sketchybar --add bracket vibe_right agents clock_right standup power_in power_out power_batt battery \
-           --set vibe_right "${_PILL[@]}"
+sketchybar --add bracket vibe_right agents clock_right standup power_flow battery \
+           --set vibe_right "${_PILL[@]}" background.border_color="${HAIR_4:-$OVERLAY}"
 
 # ---------- Force first run ----------
 sketchybar --update
