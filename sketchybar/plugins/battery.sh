@@ -1,57 +1,43 @@
 #!/usr/bin/env bash
+# Battery island: [ 34W ··• ] [ 󰂊 85% ]
+#   power_flow  watts + a travelling dot. Charging: charger watts, the dot moves right INTO the battery (mint).
+#               On battery: what the Mac is drawing, the dot moves left OUT of the battery (orange).
+#               Plugged in but holding (full or at the charge limit): charger watts, still dots (dim).
+#   battery     level glyph tinted by charge, and the percent.
+# One ioreg read per run. It runs every 2 s while power moves (the dot needs the tick) and every 30 s while holding.
+# Click: a terminal with `tyler battery watch` (every device, last report, 24 h sparklines; tyler-os #1150).
 source "$CONFIG_DIR/colors.sh"
+MINT="${MINT:-$GREEN}"; GOLD="${GOLD:-$YELLOW}"; DIM="${DIM:-$COMMENT}"; SUN_1="${SUN_1:-$ORANGE}"   # light themes skip live_vibe.sh
 
-PERCENTAGE="$(pmset -g batt | grep -Eo '[0-9]+%' | head -1 | tr -d '%')"
-CHARGING="$(pmset -g batt | grep -c 'AC Power')"
+IO="$(/usr/sbin/ioreg -rn AppleSmartBattery)"
+num() { printf '%s\n' "$IO" | grep -o "\"$1\"[ =]*[0-9]*" | head -1 | grep -o '[0-9]*$'; }
+is_yes() { printf '%s\n' "$IO" | grep -q "\"$1\" = Yes"; }
 
-[ -z "$PERCENTAGE" ] && exit 0
+CUR="$(num CurrentCapacity)"; MAX="$(num MaxCapacity)"
+[ -z "$CUR" ] || [ -z "$MAX" ] || [ "$MAX" -eq 0 ] && exit 0
+PCT=$(( CUR * 100 / MAX ))
+W_IN=$(( ($(num SystemPowerIn || echo 0) + 500) / 1000 ))
+W_OUT=$(( ($(num SystemLoad || echo 0) + 500) / 1000 ))
 
-if [ "$CHARGING" -gt 0 ]; then
-  # Charging: fill the battery one frame per second, then start over.
-  FRAMES=(󰢜 󰂆 󰂇 󰂈 󰢝 󰂉 󰢞 󰂊 󰂋 󰂅)
-  ICON="${FRAMES[$(( $(date +%s) % ${#FRAMES[@]} ))]}"
-  COLOR="$GREEN"
-  FREQ=1
-else
-  case "$PERCENTAGE" in
-    100|9[0-9]) ICON="󰁹"; COLOR="$GREEN" ;;
-    [7-8][0-9]) ICON="󰂀"; COLOR="$GREEN" ;;
-    [4-6][0-9]) ICON="󰁾"; COLOR="$YELLOW" ;;
-    [2-3][0-9]) ICON="󰁼"; COLOR="$ORANGE" ;;
-    *)          ICON="󰂃"; COLOR="$RED" ;;
-  esac
-  FREQ=10
-fi
+LEVEL=$(( PCT >= 95 ? 10 : PCT / 10 ))
+if is_yes IsCharging; then STATE=charging; elif is_yes ExternalConnected; then STATE=holding; else STATE=draining; fi
 
-# Watts in from the charger and out to the system (Apple Silicon telemetry, mW).
-TELEMETRY="$(ioreg -rn AppleSmartBattery | grep -o '"System\(PowerIn\|Load\)"=[0-9]*')"
-W_IN="$(echo "$TELEMETRY" | awk -F= '/PowerIn/ {printf "%.0f", $2/1000}')"
-W_OUT="$(echo "$TELEMETRY" | awk -F= '/Load/ {printf "%.0f", $2/1000}')"
+# Level glyphs 0..10 (Hack Nerd Font), charging set has the bolt
+PLAIN=(󰂎 󰁺 󰁻 󰁼 󰁽 󰁾 󰁿 󰂀 󰂁 󰂂 󰁹)
+BOLT=(󰢟 󰢜 󰂆 󰂇 󰂈 󰢝 󰂉 󰢞 󰂊 󰂋 󰂅)
+if [ "$PCT" -ge 60 ]; then LEVEL_COLOR="$MINT"; elif [ "$PCT" -ge 30 ]; then LEVEL_COLOR="$GOLD"
+elif [ "$PCT" -ge 15 ]; then LEVEL_COLOR="$SUN_1"; else LEVEL_COLOR="$RED"; fi
 
-# Each power number is its own bar item so it can carry its own colour, and they
-# read left to right into the battery: +in (mint)  -out (orange)  >>> net (gold).
-# The chevrons march toward the battery while it fills and point away (red) while
-# it drains. They animate at the same 1s tick as the charging icon.
-IN_LABEL=""; OUT_LABEL=""; BATT_LABEL=""; BATT_COLOR="$YELLOW"
-[ -n "$W_IN" ] && [ "$W_IN" -gt 0 ] && IN_LABEL="+${W_IN}W"
-[ -n "$W_OUT" ] && OUT_LABEL="-${W_OUT}W"
-TICK=$(( $(date +%s) % 3 ))
-if [ -n "$W_OUT" ]; then
-  W_BATT=$(( ${W_IN:-0} - W_OUT ))
-  if [ "$W_BATT" -ge 0 ]; then
-    FLOW=("›  " "›› " "›››"); BATT_LABEL="${FLOW[$TICK]} +${W_BATT}W"
-  else
-    FLOW=("  ‹" " ‹‹" "‹‹‹"); BATT_LABEL="${FLOW[$TICK]} ${W_BATT}W"; BATT_COLOR="$RED"
-  fi
-fi
+TICK=$(( $(date +%s) / 2 % 3 ))
+case "$STATE" in
+  charging) FRAMES=("•··" "·•·" "··•"); WATTS="$W_IN"; FLOW_COLOR="$MINT"; ICON="${BOLT[$LEVEL]}"; FREQ=2 ;;
+  draining) FRAMES=("··•" "·•·" "•··"); WATTS="$W_OUT"; FLOW_COLOR="$SUN_1"; ICON="${PLAIN[$LEVEL]}"; FREQ=2 ;;
+  *)        FRAMES=("···" "···" "···"); WATTS="$W_IN"; FLOW_COLOR="$DIM"; ICON="${BOLT[$LEVEL]}"; FREQ=30 ;;
+esac
 
-shown() { [ -n "$1" ] && echo on || echo off; }
+FLOW_DRAW=on
+[ "$WATTS" -le 0 ] && FLOW_DRAW=off
 
-sketchybar --set "$NAME" \
-  icon="$ICON" \
-  icon.color="$COLOR" \
-  label="${PERCENTAGE}%" \
-  update_freq="$FREQ" \
-  --set power_in   drawing="$(shown "$IN_LABEL")"   label="$IN_LABEL"   label.color="$GREEN" \
-  --set power_out  drawing="$(shown "$OUT_LABEL")"  label="$OUT_LABEL"  label.color="$ORANGE" \
-  --set power_batt drawing="$(shown "$BATT_LABEL")" label="$BATT_LABEL" label.color="$BATT_COLOR"
+sketchybar --set "$NAME" icon="$ICON" icon.color="$LEVEL_COLOR" label="${PCT}%" update_freq="$FREQ" \
+           --set power_flow drawing="$FLOW_DRAW" icon="${WATTS}W" icon.color="$FLOW_COLOR" \
+                 label="${FRAMES[$TICK]}" label.color="$FLOW_COLOR"
