@@ -45,3 +45,18 @@ export HAIR_1="0x8cff8b4b"
 export HAIR_2="0x8cff6392"
 export HAIR_3="0x8cd148f0"
 export HAIR_4="0x8c8b5cf6"
+# Spotify's own green for the Spotify logo (Tyler, 2026-10-28) — never the theme mint.
+export SPOTIFY_GREEN="0xff1db954"
+export SPOTIFY_GREEN_DIM="0x8c1db954"
+# Desktops 1-5: one sunset step each, orange -> violet (rail.sunset_at((n-1)/4), computed).
+# Full strength = the active desktop's pill; _DIM (35% alpha) = the inactive number.
+export SPACE_1="0xffff8b4b"
+export SPACE_2="0xffff6d80"
+export SPACE_3="0xffe856c1"
+export SPACE_4="0xffc04df2"
+export SPACE_5="0xff8b5cf6"
+export SPACE_1_DIM="0x59ff8b4b"
+export SPACE_2_DIM="0x59ff6d80"
+export SPACE_3_DIM="0x59e856c1"
+export SPACE_4_DIM="0x59c04df2"
+export SPACE_5_DIM="0x598b5cf6"

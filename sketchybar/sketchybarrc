@@ -110,6 +110,17 @@ sketchybar --add item front_app left \
                  script="$PLUGIN_DIR/front_app.sh" \
            --subscribe front_app front_app_switched
 
+# Gap between the left pill and the music pill (Tyler, 2026-10-28): without this spacer the two
+# bracket backgrounds touch and their borders merge into one blob.
+sketchybar --add item music_gap left \
+           --set music_gap \
+                 width=8 \
+                 padding_left=0 \
+                 padding_right=0 \
+                 icon.drawing=off \
+                 label.drawing=off \
+                 background.drawing=off
+
 # ---------- Spotify (now-playing marquee) ----------
 # Event-driven, never polled: Spotify's own distributed notification (its userInfo arrives in $INFO) and
 # SketchyBar's media_change. A 5 s poll here ran osascript into a hung Spotify and piled up 100+ stuck processes.
@@ -118,7 +129,7 @@ sketchybar --add item spotify left \
            --set spotify \
                  drawing=off \
                  icon="" \
-                 icon.color="$GREEN" \
+                 icon.color="${SPOTIFY_GREEN:-$GREEN}" \
                  label.color="$FG" \
                  label.max_chars=32 \
                  scroll_texts=on \
