@@ -230,6 +230,15 @@ cmd-shift-down = ['join-with down', 'mode main']
 cmd-shift-up = ['join-with up', 'mode main']
 cmd-shift-right = ['join-with right', 'mode main']
 
+# Muse always opens on workspace 2, Ghostty on workspace 1 (tyler-os#1243)
+[[on-window-detected]]
+if.app-id = 'com.meta.endo'
+run = 'move-node-to-workspace 2'
+
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = 'move-node-to-workspace 1'
+
 # Grok Bot launches at login: keep Desktop 1 clean, park it on workspace 2 (tyler-os#1243)
 [[on-window-detected]]
 if.app-id = 'com.anysphere.sand'
