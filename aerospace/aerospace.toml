@@ -239,10 +239,10 @@ run = 'move-node-to-workspace 2'
 if.app-id = 'com.mitchellh.ghostty'
 run = 'move-node-to-workspace 1'
 
-# Brave always opens on workspace 3 (tyler-os#1243)
+# Brave always opens on workspace 3 and goes fullscreen, same as Alt+F (tyler-os#1243)
 [[on-window-detected]]
 if.app-id = 'com.brave.Browser'
-run = 'move-node-to-workspace 3'
+run = ['layout tiling', 'move-node-to-workspace 3', 'fullscreen']
 
 # Grok Bot launches at login: keep Desktop 1 clean, park it on workspace 2 (tyler-os#1243)
 [[on-window-detected]]
