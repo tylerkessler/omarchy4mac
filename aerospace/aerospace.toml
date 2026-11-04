@@ -17,7 +17,12 @@ on-focused-monitor-changed = [
   'move-mouse monitor-lazy-center',
   'exec-and-forget /bin/bash -c "/opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$(/opt/homebrew/bin/aerospace list-workspaces --focused)"'
 ]
-on-focus-changed = ['move-mouse window-lazy-center']
+# Focus moves when a window opens or closes, so this is also the window-count event: tkos-grid (tyler-os) tiles exactly
+# 4 windows as a 2x2 grid instead of 4 columns, and puts a grid that fell to 3 back to a row (tyler-os#1267).
+on-focus-changed = [
+  'move-mouse window-lazy-center',
+  'exec-and-forget /bin/bash -c "$HOME/Scripts/tyler-os-live/dotfiles/bin/tkos-grid"'
+]
 
 # Notify SketchyBar when workspace focus changes
 exec-on-workspace-change = ['/bin/bash', '-c',
