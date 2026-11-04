@@ -1,6 +1,8 @@
 # Omarchy 4 shell defaults, ported from omarchy default/bash/{aliases,envs}.
 # Source this from ~/.zshrc. Needs: eza bat fzf zoxide (brew install).
 
+source "${${(%):-%x}:A:h}/shell.zsh"
+
 # ---- Omarchy 4 shell defaults (ported from default/bash/aliases + envs) ----
 export PATH="$HOME/.grok/bin:$PATH"
 # Grok follows Ghostty, which Omarchy already themes. New sessions pick this up.
