@@ -15,17 +15,24 @@ if [ "$SENDER" = "space_change" ]; then
   FOCUSED="$(printf '%s' "$INFO" | sed -n 's/.*"display-[0-9]*"[^0-9]*\([0-9][0-9]*\).*/\1/p' | head -1)"
 fi
 
+# This desktop's own sunset step, orange (1) -> violet (5), all different (Tyler, 2026-10-28).
+# live_vibe.sh exports SPACE_1..5 + _DIM via colors.sh; light themes skip it, so fall back to the theme accent.
+_ACC_VAR="SPACE_$SID"; _DIM_VAR="SPACE_${SID}_DIM"
+SPACE_ACC="${!_ACC_VAR:-$ACCENT}"
+SPACE_DIM="${!_DIM_VAR:-${SOFT:-$COMMENT}}"
+SPACE_GLOW="0x80${SPACE_ACC:4}"
+
 if [ "$SID" = "$FOCUSED" ]; then
   sketchybar --set "$NAME" \
     background.drawing=on \
-    background.color="$ACCENT" \
+    background.color="$SPACE_ACC" \
     icon.color="$BG" \
     icon.shadow.drawing=on \
     icon.shadow.distance=4 \
-    icon.shadow.color="${GLOW:-0x8000e5ff}"
+    icon.shadow.color="$SPACE_GLOW"
 else
   sketchybar --set "$NAME" \
     background.drawing=off \
-    icon.color="${SOFT:-$COMMENT}" \
+    icon.color="$SPACE_DIM" \
     icon.shadow.drawing=off
 fi
