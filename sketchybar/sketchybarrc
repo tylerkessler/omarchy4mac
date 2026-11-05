@@ -289,6 +289,10 @@ sketchybar --add item agents right \
                  script="$PLUGIN_DIR/agents.sh" \
                  click_script="open -na Ghostty --args -e $HOME/.local/bin/omarchy-tui bunx ccusage daily"
 
+# ---------- Instruction files shaping the focused LLM session (tyler-os coach/session_md.py, issue #1285) ----------
+# Added after every other right-hand item, so they land in the empty stretch left of the agents pill. Hidden until an LLM tab is focused.
+python3 "${TKOS_SESSION_MD:-$HOME/Scripts/tyler-os-live/coach/session_md.py}" setup
+
 # ---------- Islands: the ticker's sunset pills ----------
 # Dusk-plum fill, a soft hairline in one sunset stop per island, left to right: orange, pink, magenta, violet.
 # Light themes skip live_vibe.sh, so each colour falls back to the theme's own.
