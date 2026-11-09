@@ -40,10 +40,10 @@ ELAPSED="$(ps -p "$PID" -o etime= 2>/dev/null | awk -F'[-:]' '
 
 if [ $(( (ELAPSED / PERIOD) % 2 )) -eq 0 ]; then
   ICON=$'\U000f0f48'   # md-chair_rolling — seated
-  COLOR="$BLUE"
+  COLOR="${SUN_4:-$BLUE}"     # violet (tyler-os #1161)
 else
   ICON=$'\U000f064d'   # md-human_male — standing
-  COLOR="$GREEN"
+  COLOR="${SUN_1:-$GREEN}"    # orange
 fi
 
 # Restate the full style on every run so a leftover debug style cannot stick.

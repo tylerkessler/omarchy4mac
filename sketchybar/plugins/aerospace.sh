@@ -22,6 +22,10 @@ _ACC_VAR="SPACE_$FOCUSED"
 SPACE_ACC="${!_ACC_VAR:-$ACCENT}"
 SPACE_GLOW="0x80${SPACE_ACC:4}"
 
+SPACE_HALO="0x59${SPACE_ACC:4}"
+
+# The whole left island wears the desktop's colour: digit pill, app name, separator, hairline and glow.
+# front_app.sh only swaps the icon and name, so the colour set here sticks across app switches.
 sketchybar --set "$NAME" \
   icon="$FOCUSED" \
   background.drawing=on \
@@ -29,4 +33,8 @@ sketchybar --set "$NAME" \
   icon.color="$BG" \
   icon.shadow.drawing=on \
   icon.shadow.distance=4 \
-  icon.shadow.color="$SPACE_GLOW"
+  icon.shadow.color="$SPACE_GLOW" \
+  --set front_app icon.color="$SPACE_ACC" label.color="$SPACE_ACC" \
+                  icon.shadow.color="$SPACE_HALO" label.shadow.drawing=on label.shadow.distance=2 label.shadow.color="$SPACE_HALO" \
+  --set space_sep icon.color="$SPACE_ACC" icon.shadow.color="$SPACE_GLOW" \
+  --set vibe_left background.border_color="$SPACE_ACC" background.shadow.color="$SPACE_HALO"

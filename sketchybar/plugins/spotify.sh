@@ -52,7 +52,7 @@ fi
 # The logo is always Spotify green (Tyler, 2026-10-28): full strength playing, dimmed green paused.
 # Only the label dims when paused. SPOTIFY_GREEN comes from live_vibe.sh via colors.sh.
 if [ "$STATE" = "playing" ]; then
-  ICON_COLOR="${SPOTIFY_GREEN:-$GREEN}"; LABEL_COLOR="$FG"
+  ICON_COLOR="${SPOTIFY_GREEN:-$GREEN}"; LABEL_COLOR="${SUN_2:-$FG}"   # sunset pink while playing (tyler-os #1161)
 else
   ICON_COLOR="${SPOTIFY_GREEN_DIM:-$COMMENT}"; LABEL_COLOR="$COMMENT"
 fi
