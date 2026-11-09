@@ -95,20 +95,20 @@ sketchybar --add item space left \
 sketchybar --add item space_sep left \
            --set space_sep \
                  icon="│" \
-                 icon.color="$PINK" \
+                 icon.color="${COMMENT:-$OVERLAY}" \
                  icon.padding_left=8 \
                  icon.padding_right=8 \
-                 icon.shadow.drawing=on \
-                 icon.shadow.distance=3 \
-                 icon.shadow.color="$GLOW_PINK" \
+                 icon.shadow.drawing=off \
                  label.drawing=off \
                  background.drawing=off
 
 # ---------- Front app (focused window) ----------
 sketchybar --add item front_app left \
            --set front_app \
-                 label.color="$ACCENT" \
-                 icon.color="$ACCENT" \
+                 label.color="$FG" \
+                 icon.color="$FG" \
+                 icon.shadow.drawing=off \
+                 label.shadow.drawing=off \
                  icon.padding_right=4 \
                  script="$PLUGIN_DIR/front_app.sh" \
            --subscribe front_app front_app_switched
@@ -309,8 +309,9 @@ _PILL=(
 )
 # Each island glows its own sunset stop: full-strength hairline, 35% halo of the same hue (tyler-os #1161).
 _glow() { local c="$1"; [ -n "$c" ] && printf 'background.border_color=%s background.shadow.color=0x59%s' "$c" "${c:4}" || printf 'background.border_color=%s background.shadow.color=0x66000000' "$OVERLAY"; }
+# The left island wears the right pill's violet on every desktop; only the digit chip follows the desktop (tyler-os #1336).
 sketchybar --add bracket vibe_left space space_sep front_app \
-           --set vibe_left "${_PILL[@]}" $(_glow "$SUN_1")
+           --set vibe_left "${_PILL[@]}" $(_glow "$SUN_4")
 
 sketchybar --add bracket vibe_music spotify spotify_next spotify_star \
            --set vibe_music "${_PILL[@]}" $(_glow "$SUN_2")
