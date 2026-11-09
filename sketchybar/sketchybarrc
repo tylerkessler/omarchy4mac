@@ -303,22 +303,23 @@ _PILL=(
   background.color="${PLUM:-$BG_PILL}"
   background.corner_radius=14
   background.height=28
-  background.border_width=1
+  background.border_width=2
   background.shadow.drawing=on
-  background.shadow.distance=3
-  background.shadow.color=0x66000000
+  background.shadow.distance=4
 )
+# Each island glows its own sunset stop: full-strength hairline, 35% halo of the same hue (tyler-os #1161).
+_glow() { local c="$1"; [ -n "$c" ] && printf 'background.border_color=%s background.shadow.color=0x59%s' "$c" "${c:4}" || printf 'background.border_color=%s background.shadow.color=0x66000000' "$OVERLAY"; }
 sketchybar --add bracket vibe_left space space_sep front_app \
-           --set vibe_left "${_PILL[@]}" background.border_color="${HAIR_1:-$OVERLAY}"
+           --set vibe_left "${_PILL[@]}" $(_glow "$SUN_1")
 
 sketchybar --add bracket vibe_music spotify spotify_next spotify_star \
-           --set vibe_music "${_PILL[@]}" background.border_color="${HAIR_2:-$OVERLAY}"
+           --set vibe_music "${_PILL[@]}" $(_glow "$SUN_2")
 
 sketchybar --add bracket vibe_center clock weather standup_center \
-           --set vibe_center "${_PILL[@]}" background.border_color="${HAIR_3:-$OVERLAY}"
+           --set vibe_center "${_PILL[@]}" $(_glow "$SUN_3")
 
 sketchybar --add bracket vibe_right agents clock_right standup power_flow battery \
-           --set vibe_right "${_PILL[@]}" background.border_color="${HAIR_4:-$OVERLAY}"
+           --set vibe_right "${_PILL[@]}" $(_glow "$SUN_4")
 
 # ---------- Force first run ----------
 sketchybar --update

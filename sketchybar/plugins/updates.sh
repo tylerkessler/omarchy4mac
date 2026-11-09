@@ -9,7 +9,7 @@ source "$CONFIG_DIR/plugins/cache.sh"
 outdated() { /opt/homebrew/bin/brew outdated --quiet | wc -l | tr -d ' '; }
 COUNT="$(cached updates 21600 outdated)"
 if [ "${COUNT:-0}" -gt 0 ]; then
-  center_item "$NAME" icon="󰚰" icon.color="$ORANGE" label="$COUNT" label.color="$FG"
+  center_item "$NAME" icon="󰚰" icon.color="${SUN_2:-$ORANGE}" label="$COUNT" label.color="$FG"
 else
   sketchybar --set "$NAME" drawing=off
 fi

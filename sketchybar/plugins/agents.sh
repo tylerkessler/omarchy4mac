@@ -13,7 +13,12 @@ spend() {
 }
 COST="$(cached agents 600 spend)"
 if [ -n "$COST" ] && [ "$COST" -gt 0 ]; then
-  sketchybar --set "$NAME" drawing=on icon="󰚩" icon.color="$ACCENT" label="\$$COST" label.color="$FG"
+  # Spend tier along the sunset (tyler-os #1161): under $5 orange, $20 pink, $50 magenta, more violet.
+  if   [ "$COST" -lt 5 ];  then TIER="${SUN_1:-$ACCENT}"
+  elif [ "$COST" -lt 20 ]; then TIER="${SUN_2:-$ACCENT}"
+  elif [ "$COST" -lt 50 ]; then TIER="${SUN_3:-$ACCENT}"
+  else TIER="${SUN_4:-$ACCENT}"; fi
+  sketchybar --set "$NAME" drawing=on icon="󰚩" icon.color="$TIER" icon.shadow.color="0x80${TIER:4}" label="\$$COST" label.color="$TIER"
 else
   sketchybar --set "$NAME" drawing=off
 fi

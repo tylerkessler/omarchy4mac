@@ -8,7 +8,6 @@ if [ "$SENDER" = "front_app_switched" ]; then
     icon="$icon_result" \
     icon.drawing=on \
     icon.font="sketchybar-app-font:Regular:16.0" \
-    icon.color="$ACCENT" \
-    label="$INFO" \
-    label.color="$ACCENT"
+    label="$INFO"
+  # Colour comes from aerospace.sh: the focused desktop's sunset step (tyler-os #1161).
 fi

@@ -13,7 +13,7 @@ fi
 DND_DB="$HOME/Library/DoNotDisturb/DB/Assertions.json"
 if [ -f "$DND_DB" ] && plutil -convert json -o - "$DND_DB" 2>/dev/null \
      | python3 -c 'import json,sys; d=json.load(sys.stdin); sys.exit(0 if any(r.get("storeAssertionRecords") for r in d.get("data",[])) else 1)' 2>/dev/null; then
-  center_item indicator_dnd icon="󰂛" icon.color="$MAGENTA"
+  center_item indicator_dnd icon="󰂛" icon.color="${SUN_3:-$MAGENTA}"
 else
   sketchybar --set indicator_dnd drawing=off
 fi
