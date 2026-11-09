@@ -59,11 +59,15 @@ sketchybar --add item logo left \
                  icon.padding_left=8 \
                  icon.padding_right=8 \
                  icon.shadow.drawing=on \
-                 icon.shadow.distance=5 \
+                 icon.shadow.distance=2 \
                  icon.shadow.color="$GLOW" \
                  label.drawing=off \
                  background.drawing=off \
-                 click_script="/opt/homebrew/bin/hs -c 'omarchyMenu()'"
+                 update_freq=120 \
+                 updates=when_shown \
+                 script="$PLUGIN_DIR/logo.sh" \
+                 click_script="/opt/homebrew/bin/hs -c 'omarchyMenu()'" \
+           --subscribe logo system_woke
 
 # ---------- Claudia: her face, status, menu and voice chat (tyler-os coach/claudia_bar.py, issue #913) ----------
 # Left click = talk (then type), right click = her menu. The item, badge and popup are built by `claudia_bar.py setup`.
@@ -72,21 +76,20 @@ python3 "${TKOS_CLAUDIA_BAR:-$HOME/Scripts/tyler-os-live/coach/claudia_bar.py}" 
 # ---------- Computer-use banner: red while an agent drives the Mac, green with totals when hands come off (tyler cu) ----------
 python3 "${TKOS_CU_BAR:-$HOME/Scripts/tyler-os-live/coach/cu_bar.py}" setup
 
-# ---------- AeroSpace workspaces ----------
-for sid in 1 2 3 4 5; do
-  sketchybar --add item space."$sid" left \
-             --subscribe space."$sid" aerospace_workspace_change space_change \
-             --set space."$sid" \
-                   icon="$sid" \
-                   icon.color="$SOFT" \
-                   label.drawing=off \
-                   background.color="$ACCENT" \
-                   background.corner_radius=8 \
-                   background.height=22 \
-                   background.drawing=off \
-                   click_script="/opt/homebrew/bin/aerospace workspace $sid" \
-                   script="$PLUGIN_DIR/aerospace.sh"
-done
+# ---------- AeroSpace workspace: one digit, the focused desktop (tyler-os #1161) ----------
+# Its pill takes that desktop's sunset step (SPACE_1..5). Click = next desktop.
+sketchybar --add item space left \
+           --subscribe space aerospace_workspace_change space_change \
+           --set space \
+                 icon="1" \
+                 icon.color="$BG" \
+                 label.drawing=off \
+                 background.color="$ACCENT" \
+                 background.corner_radius=8 \
+                 background.height=22 \
+                 background.drawing=on \
+                 click_script="/opt/homebrew/bin/aerospace workspace next --wrap-around" \
+                 script="$PLUGIN_DIR/aerospace.sh"
 
 # Separator between workspaces and front_app
 sketchybar --add item space_sep left \
@@ -305,7 +308,7 @@ _PILL=(
   background.shadow.distance=3
   background.shadow.color=0x66000000
 )
-sketchybar --add bracket vibe_left space.1 space.2 space.3 space.4 space.5 space_sep front_app \
+sketchybar --add bracket vibe_left space space_sep front_app \
            --set vibe_left "${_PILL[@]}" background.border_color="${HAIR_1:-$OVERLAY}"
 
 sketchybar --add bracket vibe_music spotify spotify_next spotify_star \
