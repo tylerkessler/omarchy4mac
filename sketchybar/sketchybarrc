@@ -9,7 +9,8 @@ source "$CONFIG_DIR/live_vibe.sh"
 # ---------- Bar ----------
 # Invisible strip. The rounded pills (brackets below) are the chrome.
 # No full-width fill, no pink rectangle, no bar shadow.
-# show_in_fullscreen=off: a fullscreen app or video gets the whole screen (tyler-os#1357).
+# show_in_fullscreen=on: =off follows the auto-hiding menu bar and flickers on app switches. Hammerspoon
+# top_bar_fullscreen.lua hides the bar in real fullscreen instead (tyler-os#1358).
 sketchybar --bar \
   position=top \
   height=36 \
@@ -26,7 +27,7 @@ sketchybar --bar \
   display=all \
   topmost=on \
   sticky=on \
-  show_in_fullscreen=off \
+  show_in_fullscreen=on \
   shadow=off
 
 # ---------- Defaults ----------
