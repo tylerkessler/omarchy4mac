@@ -91,6 +91,11 @@ alt-5 = 'workspace 5'
 alt-tab = 'workspace-back-and-forth'
 cmd-ctrl-tab = 'workspace-back-and-forth'
 
+# Ctrl+Left / Ctrl+Right: previous / next desktop (tyler-os #1412). Replaces the
+# macOS Mission Control binds (symbolic hotkeys 79 and 81, switched off).
+ctrl-left = 'workspace --wrap-around prev'
+ctrl-right = 'workspace --wrap-around next'
+
 cmd-shift-1 = ['move-node-to-workspace 1', 'workspace 1']
 cmd-shift-2 = ['move-node-to-workspace 2', 'workspace 2']
 cmd-shift-3 = ['move-node-to-workspace 3', 'workspace 3']
