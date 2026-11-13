@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Keyboard cheat sheet (alt-shift-/): toggles the floating KeySheet window on the frontmost app's shortcuts.
+# Builds KeySheet.app on first use (about 10 s once), then launches the binary directly (no `open`, so it is fast).
+set -u
+APP_DIR="$HOME/.cache/omarchy4mac/KeySheet.app"
+BIN="$APP_DIR/Contents/MacOS/KeySheet"
+SRC="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")/.." && pwd)/keysheet/keysheet.swift"
+
+if pkill -x KeySheet 2>/dev/null; then exit 0; fi   # hotkey again = close
+
+if [ ! -x "$BIN" ] || [ "$SRC" -nt "$BIN" ]; then
+  mkdir -p "$APP_DIR/Contents/MacOS"
+  cat > "$APP_DIR/Contents/Info.plist" <<'P'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>com.omarchy4mac.keysheet</string>
+<key>CFBundleName</key><string>KeySheet</string>
+<key>CFBundleExecutable</key><string>KeySheet</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>LSUIElement</key><true/>
+</dict></plist>
+P
+  swiftc -O "$SRC" -o "$BIN" || exit 1
+fi
+
+FRONT="$(/usr/bin/lsappinfo info -only name "$(/usr/bin/lsappinfo front)" 2>/dev/null | sed -n '1s/^"\(.*\)" ASN.*/\1/p')"
+exec "$BIN" "$FRONT" >/dev/null 2>&1 &

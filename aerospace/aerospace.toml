@@ -91,6 +91,11 @@ alt-5 = 'workspace 5'
 alt-tab = 'workspace-back-and-forth'
 cmd-ctrl-tab = 'workspace-back-and-forth'
 
+# Ctrl+Left / Ctrl+Right: previous / next desktop (tyler-os #1412). Replaces the
+# macOS Mission Control binds (symbolic hotkeys 79 and 81, switched off).
+ctrl-left = 'workspace --wrap-around prev'
+ctrl-right = 'workspace --wrap-around next'
+
 cmd-shift-1 = ['move-node-to-workspace 1', 'workspace 1']
 cmd-shift-2 = ['move-node-to-workspace 2', 'workspace 2']
 cmd-shift-3 = ['move-node-to-workspace 3', 'workspace 3']
@@ -188,6 +193,7 @@ alt-shift-u = 'exec-and-forget open -a Muse'                 # M[u]se (Meta)
 alt-shift-m = 'exec-and-forget open -a Messages'             # [M]essages
 alt-shift-c = 'exec-and-forget open -a Claude'              # [C]laude (was Cmd+Shift+A)
 alt-shift-comma = 'exec-and-forget open -a "System Settings"' # , = Settings, like Cmd+comma
+alt-shift-slash = 'exec-and-forget $HOME/.local/bin/keysheet'  # / = ? : floating keyboard cheat sheet for the front app (toggle)
 
 # ---------- Style: theme switcher ----------
 # cmd-ctrl-shift-space → handled by Hammerspoon (shows theme chooser UI)
@@ -265,6 +271,10 @@ run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
 if.app-id = 'com.apple.systempreferences'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.omarchy4mac.keysheet'
 run = 'layout floating'
 
 [[on-window-detected]]
