@@ -198,6 +198,21 @@ sketchybar --add item touch_grass left \
                  $(pill_item_args 0xff5fd35f) \
            --subscribe touch_grass system_woke
 
+# ---------- Walk pill: today's miles, click opens the walking control panel (tyler-os #1394) ----------
+# Shared pill look: white nf-md-walk + label, dusk-plum fill, blue hairline/halo. 45 s tick. Click does not start a walk.
+sketchybar --add item walk left \
+           --set walk \
+                 drawing=off \
+                 icon="󰑡" \
+                 label.width=0 \
+                 label.max_chars=40 \
+                 update_freq=45 \
+                 updates=on \
+                 script="$PLUGIN_DIR/walk.sh" \
+                 click_script="python3 $CONFIG_DIR/lib/walk_data.py open" \
+                 $(pill_item_args 0xff33b5ff) \
+           --subscribe walk system_woke
+
 # ---------- Center: indicators · clock · weather · updates · theme ----------
 # Indicators show only while their state is on (v4 bar). Pinned to the
 # external displays by clock.sh, like the clock: the notch eats the centre.
@@ -370,6 +385,9 @@ NAME=front_app SENDER=front_app_switched INFO="$FRONT_APP" bash "$PLUGIN_DIR/fro
 
 # Prime the YouTube pill on startup
 NAME=youtube bash "$PLUGIN_DIR/youtube.sh"
+
+# Prime the walk pill on startup
+NAME=walk bash "$PLUGIN_DIR/walk.sh"
 
 # Prime Spotify marquee on startup
 NAME=spotify bash "$PLUGIN_DIR/spotify.sh"

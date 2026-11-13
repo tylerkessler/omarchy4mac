@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Walk</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root { --bg:#0b0b10; --fg:#f4eefe; --plum:#240f2e; --dim:#9a90b4; --sun1:#ff8b4b; --sun2:#ff6392; --sun4:#8b5cf6; --blue:#33b5ff; --hair:rgba(51,181,255,.55); }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--fg); font: 13px/1.4 "Hack Nerd Font", "SF Pro Text", ui-sans-serif, system-ui; }
+  body { padding: 16px 18px 20px; }
+  h1 { font-size: 15px; margin: 0 0 12px; letter-spacing: .04em; }
+  h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--dim); margin: 16px 0 8px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; }
+  .card { background: var(--plum); border: 1px solid var(--hair); border-radius: 14px; padding: 12px 14px; flex:1; min-width: 160px; }
+  .card .n { font-size: 22px; color: var(--sun1); }
+  .muted { color: var(--dim); }
+  .empty { color: var(--dim); padding: 18px 0; }
+  #bars { display:flex; align-items:flex-end; gap:4px; height: 88px; }
+  #bars span { flex:1; background: linear-gradient(180deg, var(--sun1), var(--sun4)); border-radius: 3px 3px 0 0; min-height:2px; }
+  #bars span[data-zero="1"] { background: #2a2a44; }
+  .tog { display:flex; gap:6px; margin-bottom:8px; }
+  button { background: transparent; color: var(--fg); border: 1px solid var(--hair); border-radius: 999px; padding: 4px 10px; cursor: pointer; font: inherit; }
+  button.on, button:hover { background: var(--blue); color: #0b0b10; border-color: var(--blue); }
+  button[disabled] { opacity: .45; cursor: not-allowed; }
+  #map { height: 220px; border-radius: 14px; border: 1px solid var(--hair); overflow:hidden; background: #14142a; }
+  #offmap { height: 220px; display:none; position:relative; }
+  #offmap canvas { width:100%; height:100%; }
+  #hist { max-height: 180px; overflow:auto; }
+  .hrow { display:flex; justify-content:space-between; gap:8px; padding: 7px 8px; border-radius: 8px; cursor:pointer; }
+  .hrow:hover, .hrow.on { background: rgba(51,181,255,.15); }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  a { color: var(--blue); }
+  .why { font-size: 11px; color: var(--dim); margin-top: 6px; }
+</style>
+</head>
+<body>
+  <h1>Walk</h1>
+  <h2>Now / last walk</h2>
+  <div id="now"></div>
+  <h2>Today and this week</h2>
+  <div class="row" id="totals"></div>
+  <h2>Miles</h2>
+  <div class="tog">
+    <button id="g7" class="on" type="button">7 day</button>
+    <button id="g30" type="button">30 day</button>
+  </div>
+  <div id="graph"></div>
+  <h2>Map</h2>
+  <div id="map"></div>
+  <div id="offmap"><canvas id="poly"></canvas></div>
+  <h2>History</h2>
+  <div id="hist"></div>
+  <h2>Controls</h2>
+  <div class="controls">
+    <span id="lidlab"></span>
+    <button type="button" id="lidon">Walk lid on</button>
+    <button type="button" id="lidoff">Walk lid off</button>
+    <a id="nwalk" href="#">Walking note</a>
+    <a id="nlive" href="#">WALK.md</a>
+  </div>
+  <p class="why" id="tracker"></p>
+  <p class="why" id="pause"></p>
+  <p class="why" id="gps"></p>
+  <p class="why" id="kcal"></p>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const D = __WALK_JSON__;
+const $ = (id) => document.getElementById(id);
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+function nowCard(w){
+  if (!w) return '<div class="empty">No active or last walk.</div>';
+  const steps = w.steps_est != null ? `${w.steps_est} steps (est.)` : "steps n/a (est.)";
+  const kcal = w.kcal_est != null ? `~${w.kcal_est} kcal (est.)` : "kcal n/a";
+  return `<div class="card"><div class="muted">${esc(w.phase)} · ${esc(w.date)}</div>
+    <div class="n">${esc(w.miles_label)} mi</div>
+    <div>${esc(w.duration)} · ${esc(w.pace || "pace n/a")} · ${esc(w.effort || "")}</div>
+    <div>${esc(steps)} · ${esc(kcal)}</div>
+    <div>${esc(w.route)}</div></div>`;
+}
+$("now").innerHTML = nowCard(D.now);
+$("totals").innerHTML = `
+  <div class="card"><div class="muted">Today</div><div class="n">${esc(D.today.miles_label)} mi</div>
+    <div>${esc(D.today.duration)} · ${D.today.count} walk${D.today.count===1?"":"s"}</div></div>
+  <div class="card"><div class="muted">This week</div><div class="n">${esc(D.week.miles_label)} mi</div>
+    <div>${esc(D.week.duration)} · ${D.week.count} walk${D.week.count===1?"":"s"}</div></div>`;
+function drawGraph(days){
+  const rows = days === 30 ? D.graph30 : D.graph7;
+  if (!rows || !rows.some(r => r.miles > 0)) { $("graph").innerHTML = '<div class="empty">No walks logged yet.</div>'; return; }
+  const max = Math.max(...rows.map(r => r.miles), 0.01);
+  $("graph").innerHTML = '<div id="bars">' + rows.map(r => {
+    const h = Math.max(2, Math.round(88 * r.miles / max));
+    return `<span title="${esc(r.date)} · ${r.miles} mi" data-zero="${r.miles?0:1}" style="height:${h}px"></span>`;
+  }).join("") + "</div>";
+}
+drawGraph(7);
+$("g7").onclick = () => { $("g7").className="on"; $("g30").className=""; drawGraph(7); };
+$("g30").onclick = () => { $("g30").className="on"; $("g7").className=""; drawGraph(30); };
+
+let map, line;
+function ptsFor(id){ return (D.routes && D.routes[id]) || []; }
+function drawOffline(pts){
+  $("map").style.display = "none";
+  $("offmap").style.display = "block";
+  const c = $("poly"), ctx = c.getContext("2d");
+  const w = c.width = $("offmap").clientWidth || 860, h = c.height = 220;
+  ctx.fillStyle = "#0b0b10"; ctx.fillRect(0,0,w,h);
+  if (!pts.length){ ctx.fillStyle="#9a90b4"; ctx.fillText("No GPS samples for this walk.", 16, 28); return; }
+  const lats = pts.map(p=>p[0]), lons = pts.map(p=>p[1]);
+  const minLat=Math.min(...lats), maxLat=Math.max(...lats), minLon=Math.min(...lons), maxLon=Math.max(...lons);
+  const pad=24, dx=Math.max(maxLon-minLon, 1e-5), dy=Math.max(maxLat-minLat, 1e-5);
+  const xy = (p) => [pad + (p[1]-minLon)/dx*(w-2*pad), h-pad - (p[0]-minLat)/dy*(h-2*pad)];
+  ctx.strokeStyle="#33b5ff"; ctx.lineWidth=3; ctx.beginPath();
+  pts.forEach((p,i) => { const [x,y]=xy(p); i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.stroke();
+  const a=xy(pts[0]), b=xy(pts[pts.length-1]);
+  ctx.fillStyle="#ff8b4b"; ctx.beginPath(); ctx.arc(a[0],a[1],5,0,7); ctx.fill();
+  ctx.fillStyle="#8b5cf6"; ctx.beginPath(); ctx.arc(b[0],b[1],5,0,7); ctx.fill();
+  ctx.fillStyle="#f4eefe"; ctx.fillText("start", a[0]+8, a[1]-6); ctx.fillText("end", b[0]+8, b[1]-6);
+}
+function showRoute(id){
+  const pts = ptsFor(id);
+  const fallback = (!pts.length && D.trail_fallback) ? D.trail_fallback : pts;
+  document.querySelectorAll(".hrow").forEach(el => el.classList.toggle("on", el.dataset.id===id));
+  if (window.L && fallback.length){
+    $("map").style.display="block"; $("offmap").style.display="none";
+    if (!map){
+      map = L.map("map", { zoomControl:true, attributionControl:true });
+      const tiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: "&copy; OpenStreetMap"
+      });
+      tiles.on("tileerror", () => drawOffline(fallback));
+      tiles.addTo(map);
+    }
+    if (line) map.removeLayer(line);
+    line = L.polyline(fallback, { color:"#33b5ff", weight:4 }).addTo(map);
+    map.fitBounds(line.getBounds(), { padding:[16,16] });
+  } else {
+    drawOffline(fallback);
+  }
+}
+const first = D.map_id || (D.history[0] && D.history[0].walk_id);
+if (!D.history.length && !first) $("hist").innerHTML = '<div class="empty">No walks logged yet.</div>';
+else {
+  $("hist").innerHTML = D.history.map(w =>
+    `<div class="hrow" data-id="${esc(w.walk_id)}"><span>${esc(w.date)} · ${esc(w.route)}</span>
+     <span>${esc(w.miles_label)} mi · ${esc(w.duration)}</span></div>`
+  ).join("");
+  $("hist").onclick = (e) => {
+    const row = e.target.closest(".hrow"); if (row) showRoute(row.dataset.id);
+  };
+}
+showRoute(first);
+
+$("lidlab").textContent = "Walk lid: " + ((D.lid && D.lid.label) || "unknown");
+$("lidon").onclick = () => { location.href = "tkos-walk://lid-on"; };
+$("lidoff").onclick = () => { location.href = "tkos-walk://lid-off"; };
+if (D.notes && D.notes.walk_url) $("nwalk").href = D.notes.walk_url; else { $("nwalk").removeAttribute("href"); $("nwalk").textContent = "Walking note missing"; }
+if (D.notes && D.notes.live_url) $("nlive").href = D.notes.live_url;
+const t = D.tracker || {};
+const age = t.last_sample_age_s == null ? "no sample" : (t.last_sample_age_s < 90 ? "just now" : Math.round(t.last_sample_age_s/60) + " min ago");
+$("tracker").textContent = "Tracker: " + (t.loaded ? "loaded" : "plist missing") + " · last fix " + age;
+$("pause").textContent = D.pause_why || "";
+$("gps").textContent = D.gps_why || "";
+$("kcal").textContent = D.kcal_note || "";
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") location.href = "tkos-walk://close"; });
+</script>
+</body>
+</html>
