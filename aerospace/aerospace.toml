@@ -91,6 +91,11 @@ alt-5 = 'workspace 5'
 alt-tab = 'workspace-back-and-forth'
 cmd-ctrl-tab = 'workspace-back-and-forth'
 
+# Ctrl+Left / Ctrl+Right: previous / next desktop (tyler-os #1412). Replaces the
+# macOS Mission Control binds (symbolic hotkeys 79 and 81, switched off).
+ctrl-left = 'workspace --wrap-around prev'
+ctrl-right = 'workspace --wrap-around next'
+
 cmd-shift-1 = ['move-node-to-workspace 1', 'workspace 1']
 cmd-shift-2 = ['move-node-to-workspace 2', 'workspace 2']
 cmd-shift-3 = ['move-node-to-workspace 3', 'workspace 3']
@@ -146,10 +151,10 @@ cmd-shift-backtick = 'focus --boundaries-action wrap-around-the-workspace dfs-pr
 # Web apps open as Brave app windows (`--app=<url>`), the way Omarchy launches
 # them (bin/omarchy-launch-webapp): a window of their own that tiles, not a
 # tab. `-n` is required: a running Brave drops --args otherwise.
-# One Ghostty window running tmux session "main" (tyler-os dotfiles/tmux).
+# One Ghostty window running tmux session "TKOS" (tyler-os dotfiles/tmux).
 # alt-enter focuses it; cmd-alt-enter adds a tmux tab instead of a macOS tab.
 alt-enter = 'exec-and-forget open -a Ghostty'
-cmd-alt-enter = 'exec-and-forget /opt/homebrew/bin/tmux new-window -t main: -c $HOME; open -a Ghostty'
+cmd-alt-enter = 'exec-and-forget /opt/homebrew/bin/tmux new-window -t TKOS: -c $HOME; open -a Ghostty'
 cmd-ctrl-enter = 'exec-and-forget open -na Ghostty --args -e herdr'
 cmd-shift-enter = 'exec-and-forget open -a "Brave Browser"'
 cmd-shift-alt-b = 'exec-and-forget open -na "Brave Browser" --args --incognito'
@@ -165,7 +170,7 @@ cmd-shift-n = 'exec-and-forget open -na Ghostty --args -e nvim'
 cmd-shift-c = 'exec-and-forget open -na "Brave Browser" --args --app=https://app.hey.com/calendar'
 cmd-shift-e = 'exec-and-forget open -na "Brave Browser" --args --app=https://app.hey.com'
 
-cmd-shift-a = 'exec-and-forget open -a Claude'
+# Claude moved to alt-shift-c below: Claude needs its own Cmd+Shift+A (tyler-os #1368).
 cmd-shift-alt-a = 'exec-and-forget open -na "Brave Browser" --args --app=https://grok.com'
 
 cmd-shift-alt-g = 'exec-and-forget open -a WhatsApp'
@@ -179,6 +184,16 @@ cmd-shift-w = 'exec-and-forget open -a Typora'
 cmd-shift-x = 'exec-and-forget open https://x.com'   # Finicky → X PWA window
 cmd-shift-alt-x = 'exec-and-forget open https://x.com/compose/post'   # Finicky → X PWA window
 cmd-shift-y = 'exec-and-forget open -na "Brave Browser" --args --app=https://youtube.com'
+
+# Quick keys for the most-used apps that had none (knowledgeC app usage, 30 days to
+# 2026-11-13; tyler-os #1368). Same family as alt-enter: Option plus Shift plus a letter.
+# Option+Shift letters only type rare symbols, and no app Tyler uses binds them.
+alt-shift-g = 'exec-and-forget open -a "Grok Bot"'           # [G]rok Bot
+alt-shift-u = 'exec-and-forget open -a Muse'                 # M[u]se (Meta)
+alt-shift-m = 'exec-and-forget open -a Messages'             # [M]essages
+alt-shift-c = 'exec-and-forget open -a Claude'              # [C]laude (was Cmd+Shift+A)
+alt-shift-comma = 'exec-and-forget open -a "System Settings"' # , = Settings, like Cmd+comma
+alt-shift-slash = 'exec-and-forget $HOME/.local/bin/keysheet'  # / = ? : floating keyboard cheat sheet for the front app (toggle)
 
 # ---------- Style: theme switcher ----------
 # cmd-ctrl-shift-space → handled by Hammerspoon (shows theme chooser UI)
@@ -256,6 +271,10 @@ run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
 if.app-id = 'com.apple.systempreferences'
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.omarchy4mac.keysheet'
 run = 'layout floating'
 
 [[on-window-detected]]

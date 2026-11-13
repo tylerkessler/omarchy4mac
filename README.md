@@ -99,7 +99,7 @@ is also available.
 | Keys | Action |
 |---|---|
 | ⌥↩ | Ghostty (terminal) |
-| ⌘⌥↩ | Ghostty + tmux |
+| ⌘⌥↩ | Ghostty + new tmux tab in TKOS |
 | ⌘⌃↩ | Ghostty + herdr (agent multiplexer) |
 | ⌘⇧↩ | Brave browser |
 | ⌘⇧⌥B | Brave (incognito) |
@@ -108,7 +108,12 @@ is also available.
 | ⌘⇧N | Ghostty + nvim |
 | ⌘⇧D | Ghostty + lazydocker |
 | ⌘⇧M | Spotify |
-| ⌘⇧A | Claude |
+| ⌥⇧C | Claude (⌘⇧A stays Claude's own) |
+| ⌥⇧G | Grok Bot |
+| ⌥⇧U | Muse |
+| ⌥⇧/ | Keyboard cheat sheet: floating, opens on the front app's shortcuts. Esc or ⌥⇧/ again closes. Also the ⌨️ pill in SketchyBar |
+| ⌥⇧M | Messages |
+| ⌥⇧, | System Settings |
 | ⌘⇧⌥A | Grok (app window) |
 | ⌘⇧O | Obsidian |
 | ⌘⇧W | Typora |

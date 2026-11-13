@@ -212,6 +212,8 @@ sketchybar --add item touch_grass left \
                  $(pill_item_args 0xff5fd35f) \
            --subscribe touch_grass system_woke
 
+source "$CONFIG_DIR/items/keys.sh"   # keyboard cheat sheet pill
+
 # ---------- Center: indicators · clock · weather · updates · theme ----------
 # Indicators show only while their state is on (v4 bar). Pinned to the
 # external displays by clock.sh, like the clock: the notch eats the centre.
