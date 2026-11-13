@@ -6,6 +6,7 @@ PLUGIN_DIR="$CONFIG_DIR/plugins"
 source "$CONFIG_DIR/colors.sh"
 source "$CONFIG_DIR/live_vibe.sh"
 source "$CONFIG_DIR/lib/pill_item.sh"
+source "$CONFIG_DIR/pill.sh"   # one pill design for every island (tyler-os #1381)
 
 # ---------- Bar ----------
 # Invisible strip. The rounded pills (brackets below) are the chrome.
@@ -80,17 +81,16 @@ python3 "${TKOS_CLAUDIA_BAR:-$HOME/Scripts/tyler-os-live/coach/claudia_bar.py}" 
 python3 "${TKOS_CU_BAR:-$HOME/Scripts/tyler-os-live/coach/cu_bar.py}" setup
 
 # ---------- AeroSpace workspace: one digit, the focused desktop (tyler-os #1161) ----------
-# Its pill takes that desktop's sunset step (SPACE_1..5). Click = next desktop.
+# Just the number, no chip or circle: drawn halfway between the desktop's sunset step and white, semi-transparent, so the bar
+# behind it bleeds through (aerospace.sh, tyler-os #1381). Click = next desktop.
 sketchybar --add item space left \
            --subscribe space aerospace_workspace_change space_change \
            --set space \
                  icon="1" \
-                 icon.color="$BG" \
+                 icon.color="$FG" \
+                 icon.shadow.drawing=off \
                  label.drawing=off \
-                 background.color="$ACCENT" \
-                 background.corner_radius=8 \
-                 background.height=22 \
-                 background.drawing=on \
+                 background.drawing=off \
                  click_script="/opt/homebrew/bin/aerospace workspace next --wrap-around" \
                  script="$PLUGIN_DIR/aerospace.sh"
 
@@ -127,41 +127,55 @@ sketchybar --add item music_gap left \
                  label.drawing=off \
                  background.drawing=off
 
-# ---------- Spotify (now-playing marquee) ----------
-# Event-driven, never polled: Spotify's own distributed notification (its userInfo arrives in $INFO) and
-# SketchyBar's media_change. A 5 s poll here ran osascript into a hung Spotify and piled up 100+ stuck processes.
+# ---------- Spotify pill: always shown, driven by the Spotify Web API (tyler-os #1381) ----------
+# plugins/spotify.sh -> spotify_view.py asks coach/spotify_library.py `bar` (cached, rate limited, no osascript) every 5 s and on the
+# Mac app's track-change events. It grows and shrinks with the song title (tanh), scrolls only past the max width, and condenses while
+# the computer-use banner is on. Nothing playing = the last song dimmed, or "Spotify". Clicks (play/pause, next, star) use the Web API too.
 sketchybar --add event spotify_change "com.spotify.client.PlaybackStateChanged"
+sketchybar --add event spotify_refresh
 sketchybar --add item spotify left \
            --set spotify \
-                 drawing=off \
-                 icon="" \
-                 icon.color="${SPOTIFY_GREEN:-$GREEN}" \
+                 drawing=on \
+                 icon="" \
+                 icon.color="$FG" \
+                 label="Spotify" \
                  label.color="$FG" \
-                 label.max_chars=32 \
+                 label.max_chars=7 \
                  scroll_texts=on \
                  label.scroll_duration=200 \
                  background.drawing=off \
+                 update_freq=5 \
+                 updates=on \
                  script="$PLUGIN_DIR/spotify.sh" \
-                 click_script="osascript -e 'tell application \"Spotify\" to playpause'" \
-           --subscribe spotify spotify_change media_change
+                 click_script="$PLUGIN_DIR/spotify_click.sh playpause" \
+           --subscribe spotify spotify_change spotify_refresh media_change system_woke
 
-# Next-track button (shown/hidden together with the marquee by spotify.sh)
+sketchybar --add item spotify_play left \
+           --set spotify_play \
+                 drawing=on \
+                 icon="" \
+                 icon.color="$FG" \
+                 icon.font="Hack Nerd Font:Bold:12.0" \
+                 label.drawing=off \
+                 background.drawing=off \
+                 click_script="$PLUGIN_DIR/spotify_click.sh playpause"
+
 sketchybar --add item spotify_next left \
            --set spotify_next \
                  drawing=off \
-                 icon="" \
+                 icon="" \
                  icon.color="$FG" \
                  label.drawing=off \
                  background.drawing=off \
-                 click_script="osascript -e 'tell application \"Spotify\" to next track'"
+                 click_script="$PLUGIN_DIR/spotify_click.sh next"
 
-# Star (shown/hidden with the marquee by spotify.sh): ★ gold = in Your Library, ☆ = not yet; click to flip it.
-# Needs a one-time `tyler spotify login` (tyler-os coach/spotify_library.py); until then it shows a dim ☆.
+# Star: ★ gold = in Your Library, ☆ = not yet; both come from the API. Needs `tyler spotify setup <client_id>` + `tyler spotify login` once
+# (tyler-os coach/spotify_library.py); until then the star stays hidden and the pill says "Spotify - connect".
 sketchybar --add item spotify_star left \
            --set spotify_star \
                  drawing=off \
                  icon="☆" \
-                 icon.color="$COMMENT" \
+                 icon.color="$FG" \
                  label.drawing=off \
                  background.drawing=off \
                  click_script="$PLUGIN_DIR/spotify_star.sh"
@@ -217,11 +231,9 @@ sketchybar --add item clock center \
            --set clock \
                  update_freq=10 \
                  icon="" \
-                 icon.color="$PINK" \
+                 icon.color="$FG" \
                  label.color="$FG" \
-                 icon.shadow.drawing=on \
-                 icon.shadow.distance=4 \
-                 icon.shadow.color="$GLOW_PINK" \
+                 icon.shadow.drawing=off \
                  script="$PLUGIN_DIR/clock.sh" \
                  click_script='open "x-apple.systempreferences:com.apple.Date-Time-Settings.extension"' \
            --subscribe clock display_change
@@ -311,11 +323,9 @@ sketchybar --add item clock_right right \
            --set clock_right \
                  drawing=off \
                  icon="󰥔" \
-                 icon.color="$PINK" \
+                 icon.color="$FG" \
                  label.color="$FG" \
-                 icon.shadow.drawing=on \
-                 icon.shadow.distance=4 \
-                 icon.shadow.color="$GLOW_PINK" \
+                 icon.shadow.drawing=off \
                  click_script='open "x-apple.systempreferences:com.apple.Date-Time-Settings.extension"'
 
 
@@ -331,31 +341,21 @@ sketchybar --add item agents right \
 # Added after every other right-hand item, so they land in the empty stretch left of the agents pill. Hidden until an LLM tab is focused.
 python3 "${TKOS_SESSION_MD:-$HOME/Scripts/tyler-os-live/coach/session_md.py}" setup
 
-# ---------- Islands: the ticker's sunset pills ----------
-# Dusk-plum fill, a soft hairline in one sunset stop per island, left to right: orange, pink, magenta, violet.
-# Light themes skip live_vibe.sh, so each colour falls back to the theme's own.
-_PILL=(
-  background.color="${PLUM:-$BG_PILL}"
-  background.corner_radius=14
-  background.height=28
-  background.border_width=2
-  background.shadow.drawing=on
-  background.shadow.distance=4
-)
-# Each island glows its own sunset stop: full-strength hairline, 35% halo of the same hue (tyler-os #1161).
-_glow() { local c="$1"; [ -n "$c" ] && printf 'background.border_color=%s background.shadow.color=0x59%s' "$c" "${c:4}" || printf 'background.border_color=%s background.shadow.color=0x66000000' "$OVERLAY"; }
-# The left island wears the right pill's violet on every desktop; only the digit chip follows the desktop (tyler-os #1336).
+# ---------- Islands: the ticker's sunset pills, one design (pill.sh) ----------
+# Every pill is the same shape with white icon and text; only the accent (hairline + 35% halo of the same hue) differs, left to right:
+# violet, Spotify green, magenta, violet. Light themes skip live_vibe.sh, so each colour falls back to the theme's own.
+# The left island wears the right pill's violet on every desktop (tyler-os #1336); the desktop number is just a coloured digit.
 sketchybar --add bracket vibe_left space space_sep front_app \
-           --set vibe_left "${_PILL[@]}" $(_glow "$SUN_4")
+           --set vibe_left $(pill_args "$SUN_4")
 
-sketchybar --add bracket vibe_music spotify spotify_next spotify_star \
-           --set vibe_music "${_PILL[@]}" $(_glow "$SUN_2")
+sketchybar --add bracket vibe_music spotify spotify_play spotify_next spotify_star \
+           --set vibe_music $(pill_args "${SPOTIFY_GREEN:-$GREEN}")
 
 sketchybar --add bracket vibe_center clock weather standup_center \
-           --set vibe_center "${_PILL[@]}" $(_glow "$SUN_3")
+           --set vibe_center $(pill_args "$SUN_3")
 
 sketchybar --add bracket vibe_right agents clock_right standup power_flow battery \
-           --set vibe_right "${_PILL[@]}" $(_glow "$SUN_4")
+           --set vibe_right $(pill_args "$SUN_4")
 
 # ---------- Force first run ----------
 sketchybar --update
@@ -371,7 +371,8 @@ NAME=front_app SENDER=front_app_switched INFO="$FRONT_APP" bash "$PLUGIN_DIR/fro
 # Prime the YouTube pill on startup
 NAME=youtube bash "$PLUGIN_DIR/youtube.sh"
 
-# Prime Spotify marquee on startup
+# Prime the Spotify pill on startup (forget the remembered width: a fresh item has none to animate from)
+rm -f "$HOME/.cache/omarchy4mac/spotify_pill.json"
 NAME=spotify bash "$PLUGIN_DIR/spotify.sh"
 
 # Prime the stand-up / sit-down icons on startup (they have no event to subscribe to)
