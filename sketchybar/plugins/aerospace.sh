@@ -16,19 +16,12 @@ if [ "$SENDER" = "space_change" ]; then
 fi
 [ -n "$FOCUSED" ] || exit 0
 
-# The desktop's own sunset step, orange (1) -> violet (5) (Tyler, 2026-10-28).
-# live_vibe.sh exports SPACE_1..5 via colors.sh; light themes skip it, so fall back to the theme accent.
-_ACC_VAR="SPACE_$FOCUSED"
-SPACE_ACC="${!_ACC_VAR:-$ACCENT}"
-SPACE_GLOW="0x80${SPACE_ACC:4}"
-
-# Only the digit chip wears the desktop's colour. The outline, divider and app name stay fixed in
-# sketchybarrc (violet outline, quiet divider, light type like the clock) so the left island matches the right pill (tyler-os #1336).
+# Just the number, no chip: halfway between the desktop's own sunset step (orange 1 -> violet 5) and white, semi-transparent,
+# so the bar behind it bleeds through (Tyler, 2026-11-13). live_vibe.sh exports SPACE_1_TXT..5_TXT; light themes skip it
+# and the digit keeps the theme's text colour.
+_TXT_VAR="SPACE_${FOCUSED}_TXT"
 sketchybar --set "$NAME" \
   icon="$FOCUSED" \
-  background.drawing=on \
-  background.color="$SPACE_ACC" \
-  icon.color="$BG" \
-  icon.shadow.drawing=on \
-  icon.shadow.distance=4 \
-  icon.shadow.color="$SPACE_GLOW"
+  background.drawing=off \
+  icon.color="${!_TXT_VAR:-$FG}" \
+  icon.shadow.drawing=off

@@ -60,3 +60,10 @@ export SPACE_2_DIM="0x59ff6d80"
 export SPACE_3_DIM="0x59e856c1"
 export SPACE_4_DIM="0x59c04df2"
 export SPACE_5_DIM="0x598b5cf6"
+# The desktop number's own colour: halfway between the desktop's step and white, 80% opaque, so the bar behind bleeds through
+# (pillcalc.mix_white; tests/test_pills.py keeps these in step).
+export SPACE_1_TXT="0xccffc5a5"
+export SPACE_2_TXT="0xccffb6bf"
+export SPACE_3_TXT="0xccf3aae0"
+export SPACE_4_TXT="0xccdfa6f8"
+export SPACE_5_TXT="0xccc5adfa"
