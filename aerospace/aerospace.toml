@@ -165,7 +165,7 @@ cmd-shift-n = 'exec-and-forget open -na Ghostty --args -e nvim'
 cmd-shift-c = 'exec-and-forget open -na "Brave Browser" --args --app=https://app.hey.com/calendar'
 cmd-shift-e = 'exec-and-forget open -na "Brave Browser" --args --app=https://app.hey.com'
 
-cmd-shift-a = 'exec-and-forget open -a Claude'
+# Claude moved to alt-shift-c below: Claude needs its own Cmd+Shift+A (tyler-os #1368).
 cmd-shift-alt-a = 'exec-and-forget open -na "Brave Browser" --args --app=https://grok.com'
 
 cmd-shift-alt-g = 'exec-and-forget open -a WhatsApp'
@@ -186,6 +186,7 @@ cmd-shift-y = 'exec-and-forget open -na "Brave Browser" --args --app=https://you
 alt-shift-g = 'exec-and-forget open -a "Grok Bot"'           # [G]rok Bot
 alt-shift-u = 'exec-and-forget open -a Muse'                 # M[u]se (Meta)
 alt-shift-m = 'exec-and-forget open -a Messages'             # [M]essages
+alt-shift-c = 'exec-and-forget open -a Claude'              # [C]laude (was Cmd+Shift+A)
 alt-shift-comma = 'exec-and-forget open -a "System Settings"' # , = Settings, like Cmd+comma
 
 # ---------- Style: theme switcher ----------
