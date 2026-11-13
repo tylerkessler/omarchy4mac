@@ -5,6 +5,7 @@
 PLUGIN_DIR="$CONFIG_DIR/plugins"
 source "$CONFIG_DIR/colors.sh"
 source "$CONFIG_DIR/live_vibe.sh"
+source "$CONFIG_DIR/lib/pill_item.sh"
 
 # ---------- Bar ----------
 # Invisible strip. The rounded pills (brackets below) are the chrome.
@@ -164,6 +165,38 @@ sketchybar --add item spotify_star left \
                  label.drawing=off \
                  background.drawing=off \
                  click_script="$PLUGIN_DIR/spotify_star.sh"
+
+# ---------- YouTube pill: only while a YouTube video is open in Brave (tyler-os #1381) ----------
+# Shared pill look (lib/pill_item.sh): white logo and title, YouTube red accent, grows and shrinks with the title, condenses
+# while the computer-use banner is on. plugins/youtube.sh reads Brave's window titles from AeroSpace on front-app and wake events plus a 15 s backstop.
+sketchybar --add item youtube left \
+           --set youtube \
+                 drawing=off \
+                 icon="" \
+                 label.width=0 \
+                 label.max_chars=40 \
+                 label.scroll_duration=200 \
+                 update_freq=15 \
+                 updates=on \
+                 script="$PLUGIN_DIR/youtube.sh" \
+                 click_script="open -a 'Brave Browser'" \
+                 $(pill_item_args 0xffff0000) \
+           --subscribe youtube front_app_switched system_woke
+
+# ---------- Touch grass pill: 2+ hours of active use without a 10-minute break (tyler-os #1381) ----------
+# Ticks every 60 s on HID idle time. Click = snooze 15 minutes; a real break clears it.
+sketchybar --add item touch_grass left \
+           --set touch_grass \
+                 drawing=off \
+                 icon="🌱" \
+                 label.width=0 \
+                 label.max_chars=40 \
+                 update_freq=60 \
+                 updates=on \
+                 script="$PLUGIN_DIR/touch_grass.sh" \
+                 click_script="python3 $CONFIG_DIR/lib/extras.py grass-snooze; sketchybar --set touch_grass drawing=off" \
+                 $(pill_item_args 0xff5fd35f) \
+           --subscribe touch_grass system_woke
 
 # ---------- Center: indicators · clock · weather · updates · theme ----------
 # Indicators show only while their state is on (v4 bar). Pinned to the
@@ -334,6 +367,9 @@ sketchybar --trigger aerospace_workspace_change \
 # 2 s limit: a pending Automation prompt or a busy System Events must not hang the whole config load.
 FRONT_APP="$(/usr/bin/perl -e 'alarm 2; exec @ARGV' /usr/bin/osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true' 2>/dev/null)"
 NAME=front_app SENDER=front_app_switched INFO="$FRONT_APP" bash "$PLUGIN_DIR/front_app.sh"
+
+# Prime the YouTube pill on startup
+NAME=youtube bash "$PLUGIN_DIR/youtube.sh"
 
 # Prime Spotify marquee on startup
 NAME=spotify bash "$PLUGIN_DIR/spotify.sh"
