@@ -172,7 +172,7 @@ sketchybar --add item spotify_star left \
 sketchybar --add item youtube left \
            --set youtube \
                  drawing=off \
-                 icon="" \
+                 icon="" \
                  label.width=0 \
                  label.max_chars=40 \
                  label.scroll_duration=200 \
