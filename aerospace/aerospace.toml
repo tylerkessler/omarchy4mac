@@ -146,10 +146,10 @@ cmd-shift-backtick = 'focus --boundaries-action wrap-around-the-workspace dfs-pr
 # Web apps open as Brave app windows (`--app=<url>`), the way Omarchy launches
 # them (bin/omarchy-launch-webapp): a window of their own that tiles, not a
 # tab. `-n` is required: a running Brave drops --args otherwise.
-# One Ghostty window running tmux session "main" (tyler-os dotfiles/tmux).
+# One Ghostty window running tmux session "TKOS" (tyler-os dotfiles/tmux).
 # alt-enter focuses it; cmd-alt-enter adds a tmux tab instead of a macOS tab.
 alt-enter = 'exec-and-forget open -a Ghostty'
-cmd-alt-enter = 'exec-and-forget /opt/homebrew/bin/tmux new-window -t main: -c $HOME; open -a Ghostty'
+cmd-alt-enter = 'exec-and-forget /opt/homebrew/bin/tmux new-window -t TKOS: -c $HOME; open -a Ghostty'
 cmd-ctrl-enter = 'exec-and-forget open -na Ghostty --args -e herdr'
 cmd-shift-enter = 'exec-and-forget open -a "Brave Browser"'
 cmd-shift-alt-b = 'exec-and-forget open -na "Brave Browser" --args --incognito'
@@ -179,6 +179,14 @@ cmd-shift-w = 'exec-and-forget open -a Typora'
 cmd-shift-x = 'exec-and-forget open https://x.com'   # Finicky → X PWA window
 cmd-shift-alt-x = 'exec-and-forget open https://x.com/compose/post'   # Finicky → X PWA window
 cmd-shift-y = 'exec-and-forget open -na "Brave Browser" --args --app=https://youtube.com'
+
+# Quick keys for the most-used apps that had none (knowledgeC app usage, 30 days to
+# 2026-11-13; tyler-os #1368). Same family as alt-enter: Option plus Shift plus a letter.
+# Option+Shift letters only type rare symbols, and no app Tyler uses binds them.
+alt-shift-g = 'exec-and-forget open -a "Grok Bot"'           # [G]rok Bot
+alt-shift-u = 'exec-and-forget open -a Muse'                 # M[u]se (Meta)
+alt-shift-m = 'exec-and-forget open -a Messages'             # [M]essages
+alt-shift-comma = 'exec-and-forget open -a "System Settings"' # , = Settings, like Cmd+comma
 
 # ---------- Style: theme switcher ----------
 # cmd-ctrl-shift-space → handled by Hammerspoon (shows theme chooser UI)
