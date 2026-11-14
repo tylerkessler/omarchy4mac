@@ -24,5 +24,12 @@ P
   swiftc -O "$SRC" -o "$BIN" || exit 1
 fi
 
+if [ "${1:-}" = "tkos" ]; then   # TKOS shortcuts page, built from the live config files
+  KEYSHEET_PAGE="$(python3 "$(dirname "$SRC")/tkos_keys.py")" || exit 1
+  export KEYSHEET_PAGE
+  exec "$BIN" >/dev/null 2>&1 &
+  exit 0
+fi
+
 FRONT="$(/usr/bin/lsappinfo info -only name "$(/usr/bin/lsappinfo front)" 2>/dev/null | sed -n '1s/^"\(.*\)" ASN.*/\1/p')"
 exec "$BIN" "$FRONT" >/dev/null 2>&1 &

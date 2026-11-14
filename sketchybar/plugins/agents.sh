@@ -11,6 +11,9 @@ spend() {
   PATH="$HOME/.bun/bin:$PATH" bunx ccusage daily --json --since "$(date +%Y%m%d)" 2>/dev/null \
     | python3 -c 'import json,sys; d=json.load(sys.stdin); print(round(sum(x.get("totalCost",0) for x in d.get("daily",[]))))'
 }
+# Logo motion + TK colour ride this item's update (30 s; the python read is cached, ccusage stays at 10 min).
+"$CONFIG_DIR/plugins/agent_status.sh"
+
 COST="$(cached agents 600 spend)"
 if [ -n "$COST" ] && [ "$COST" -gt 0 ]; then
   # Spend tier along the sunset (tyler-os #1161): under $5 orange, $20 pink, $50 magenta, more violet.
@@ -18,7 +21,7 @@ if [ -n "$COST" ] && [ "$COST" -gt 0 ]; then
   elif [ "$COST" -lt 20 ]; then TIER="${SUN_2:-$ACCENT}"
   elif [ "$COST" -lt 50 ]; then TIER="${SUN_3:-$ACCENT}"
   else TIER="${SUN_4:-$ACCENT}"; fi
-  sketchybar --set "$NAME" drawing=on icon="󰚩" icon.color="$TIER" icon.shadow.color="0x80${TIER:4}" label="\$$COST" label.color="$TIER"
+  sketchybar --set "$NAME" drawing=on icon="󰚩" icon.color="$TIER" label="\$$COST" label.color="$TIER"
 else
   sketchybar --set "$NAME" drawing=off
 fi
