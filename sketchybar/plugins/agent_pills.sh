@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Agent status pills (tyler-os #1424): queue, budget, load, cu_lock. Driven by events; each item's update_freq is only a slow fallback.
+# Agent status (tyler-os #1424, #1440): the agents pill, the load dot and cu_lock. Driven by events; update_freq is only a slow fallback.
+# The agents pill is one line: today's spend · running/queued jobs · Claude 5-hour budget ("$18 · 2 running · 5h 73%").
 # NAME picks the item. SENDER is the event: claude_done (STATUS, LABEL), donna_queue, computer_use_lock, system_woke, routine.
-#   agent_pills.sh toggle   (budget click_script) opens/closes the budget popup (weekly %).
+#   agent_pills.sh toggle   (agents click_script) opens/closes the budget popup (5-hour and weekly %).
 source "$CONFIG_DIR/colors.sh"
 [ -f "$CONFIG_DIR/live_vibe.sh" ] && source "$CONFIG_DIR/live_vibe.sh"
 MINT="${MINT:-$GREEN}"; GOLD="${GOLD:-$YELLOW}"
@@ -47,33 +48,30 @@ tier() {   # tier VALUE AMBER RED -> colour
 fill_budget() {   # popup rows: 5-hour, week, source
   local five_r=$1 five_p=$2 wk_r=$3 wk_p=$4 age=$5 fc wc
   fc="$(tier "$five_p" 30 40)"; wc="$(tier "${wk_p:-0}" 40 50)"
-  $SB --set budget.r1 drawing=on label="5-hour   ${five_p}%   (amber 30, stop 40)" label.color="$fc" \
-      --set budget.r2 drawing=on label="  resets $(at_time "$five_r")" label.color="$FG"
+  $SB --set agents.r1 drawing=on label="5-hour   ${five_p}%   (amber 30, stop 40)" label.color="$fc" \
+      --set agents.r2 drawing=on label="  resets $(at_time "$five_r")" label.color="$FG"
   if [ "${wk_p:-0}" -ge 0 ] 2>/dev/null && [ "$wk_r" != 0 ]; then
-    $SB --set budget.r3 drawing=on label="Week     ${wk_p}%   (stop 50)" label.color="$wc" \
-        --set budget.r4 drawing=on label="  resets $(at_time "$wk_r" '%a %-I:%M %p')  ·  read $((age / 60)) min ago" label.color="$FG"
+    $SB --set agents.r3 drawing=on label="Week     ${wk_p}%   (stop 50)" label.color="$wc" \
+        --set agents.r4 drawing=on label="  resets $(at_time "$wk_r" '%a %-I:%M %p')  ·  read $((age / 60)) min ago" label.color="$FG"
   else
-    $SB --set budget.r3 drawing=on label="Week     –   (no reading yet)" label.color="$FG" --set budget.r4 drawing=off
+    $SB --set agents.r3 drawing=on label="Week     –   (no reading yet)" label.color="$FG" --set agents.r4 drawing=off
   fi
 }
 
-close_popup() { $SB --set budget popup.drawing=off; [ "$(cat "$POPUP_STATE" 2>/dev/null)" = budget ] && : > "$POPUP_STATE"; }
+close_popup() { $SB --set agents popup.drawing=off; [ "$(cat "$POPUP_STATE" 2>/dev/null)" = agents ] && : > "$POPUP_STATE"; }
 
+# "5h 73%" and its tier colour (amber at 30, red at 40), or nothing without a reading under 6 h old.
+BUDGET_TEXT=""; BUDGET_C=""
 budget() {
-  local out five_p five_r wk_p wk_r age c
+  local out five_p five_r wk_p wk_r age
   out="$(usage)"
-  if [ "$out" = "-" ] || [ -z "$out" ]; then
-    $SB --set budget label="5h –" icon.color=0xffffffff $(pill_args_border "$MINT")
-    return
-  fi
+  [ "$out" = "-" ] || [ -z "$out" ] && return
   read -r five_p five_r wk_p wk_r age <<<"$out"
-  c="$(tier "$five_p" 30 40)"
-  $SB --set budget label="5h ${five_p}%" $(pill_args_border "$c")
-  [ "$(cat "$POPUP_STATE" 2>/dev/null)" = budget ] && fill_budget "$five_r" "$five_p" "$wk_r" "$wk_p" "$age"
+  BUDGET_TEXT="5h ${five_p}%"; [ "$five_p" -ge 30 ] && BUDGET_C="$(tier "$five_p" 30 40)"
+  [ "$(cat "$POPUP_STATE" 2>/dev/null)" = agents ] && fill_budget "$five_r" "$five_p" "$wk_r" "$wk_p" "$age"
 }
-pill_args_border() { printf 'background.border_color=%s' "$1"; }
 
-# ---- queue: Claude tabs in TKOS that are working + live Donna watchers ----
+# ---- queue: Claude tabs in TKOS that are working + live Donna watchers ("2 running · 1 queued", nothing when idle) ----
 queue() {
   local running=0 queued tmux=/opt/homebrew/bin/tmux w
   [ -x "$tmux" ] || tmux="$(command -v tmux)"
@@ -84,9 +82,33 @@ queue() {
     done < <("$tmux" list-panes -s -t TKOS -F '#{window_id} #{pane_current_command}' 2>/dev/null | awk '$2 == "claude.exe" {print $1}')
   fi
   queued="$(ps -axo command= | grep -oE '\.donna/watchers/[A-Za-z0-9_.-]+\.(sh|py|zsh)' | sort -u | wc -l | tr -d ' ')"
-  local text
-  if [ "$running" -eq 0 ] && [ "$queued" -eq 0 ]; then text="idle"; else text="$running running · $queued queued"; fi
-  $SB --set queue label="$text"
+  [ "$running" -gt 0 ] && printf '%s running' "$running"
+  [ "$running" -gt 0 ] && [ "$queued" -gt 0 ] && printf ' · '
+  [ "$queued" -gt 0 ] && printf '%s queued' "$queued"
+}
+
+# ---- the agents pill: spend (plugins/agents.sh, ccusage cached 10 min) · queue · budget, white text; the icon wears the spend tier,
+# or the budget's amber/red once it reaches 30%. Hidden only when all three are empty. ----
+agents() {
+  "$CONFIG_DIR/plugins/agent_status.sh"   # logo motion + TK colour ride this item's update
+  local cost q tier parts=()
+  cost="$(bash "$CONFIG_DIR/plugins/agents.sh")"
+  q="$(queue)"
+  budget
+  if [ -n "$cost" ] && [ "$cost" -gt 0 ] 2>/dev/null; then
+    # Spend tier along the sunset (tyler-os #1161): under $5 orange, $20 pink, $50 magenta, more violet.
+    if   [ "$cost" -lt 5 ];  then tier="${SUN_1:-$ACCENT}"
+    elif [ "$cost" -lt 20 ]; then tier="${SUN_2:-$ACCENT}"
+    elif [ "$cost" -lt 50 ]; then tier="${SUN_3:-$ACCENT}"
+    else tier="${SUN_4:-$ACCENT}"; fi
+    parts+=("\$$cost")
+  fi
+  [ -n "$q" ] && parts+=("$q")
+  [ -n "$BUDGET_TEXT" ] && parts+=("$BUDGET_TEXT")
+  if [ ${#parts[@]} -eq 0 ]; then $SB --set agents drawing=off; return; fi
+  local label="${parts[0]}" p
+  for p in "${parts[@]:1}"; do label="$label · $p"; done
+  $SB --set agents drawing=on icon="󰚩" icon.color="${BUDGET_C:-${tier:-$FG}}" label="$label" label.color="$FG"
 }
 
 flash_active() {
@@ -95,38 +117,33 @@ flash_active() {
   [ -n "$until" ] && [ "$(date +%s)" -lt "$until" ]
 }
 
-settle() {   # back to the quiet look, then recount
-  $SB --set queue background.border_color="${SUN_3:-$ACCENT}" background.border_width=2
-  queue
-}
-
-# click_script path: agent_pills.sh toggle (budget popup)
+# click_script path: agent_pills.sh toggle (budget popup under the agents pill)
 if [ "${1:-}" = toggle ]; then
-  if [ "$(cat "$POPUP_STATE" 2>/dev/null)" = budget ]; then close_popup; exit 0; fi
+  if [ "$(cat "$POPUP_STATE" 2>/dev/null)" = agents ]; then close_popup; exit 0; fi
   "$(dirname "$0")/popup.sh" close   # whichever other popup is open
   out="$(usage)"
   if [ "$out" = "-" ] || [ -z "$out" ]; then
-    $SB --set budget.r1 drawing=on label="No Claude usage reading in the last 6 h" label.color="$FG" --set budget.r2 drawing=off --set budget.r3 drawing=off --set budget.r4 drawing=off
+    $SB --set agents.r1 drawing=on label="No Claude usage reading in the last 6 h" label.color="$FG" --set agents.r2 drawing=off --set agents.r3 drawing=off --set agents.r4 drawing=off
   else
     read -r a b c d e <<<"$out"; fill_budget "$b" "$a" "$d" "$c" "$e"
   fi
-  printf budget > "$POPUP_STATE"
-  $SB --set budget popup.drawing=on
+  printf agents > "$POPUP_STATE"
+  $SB --set agents popup.drawing=on
+  exit 0
 fi
 
 case "$NAME:$SENDER" in
-  budget:mouse.exited.global) close_popup; exit 0 ;;
-  budget:mouse.*) exit 0 ;;
-  queue:claude_done)
+  agents:mouse.exited.global) close_popup; exit 0 ;;
+  agents:mouse.*) exit 0 ;;
+  agents:claude_done)
     case "$STATUS" in merged) C="$MINT"; W="merged" ;; failed) C="$RED"; W="failed" ;; stalled) C="$RED"; W="stalled" ;; *) exit 0 ;; esac
     echo "$(($(date +%s) + 8)) $STATUS $LABEL" > "$FLASH"
-    $SB --set queue background.border_color="$C" label="$W${LABEL:+ · $LABEL}"
+    $SB --set agents drawing=on icon.color="$C" label="$W${LABEL:+ · $LABEL}"
     # Hold about 8 s, then settle (a newer flash moves the deadline, so only the last one settles).
-    ( sleep 8.5; flash_active || NAME=queue SENDER=settle CONFIG_DIR="$CONFIG_DIR" bash "$0" ) >/dev/null 2>&1 </dev/null &
+    ( sleep 8.5; flash_active || NAME=agents SENDER=settle CONFIG_DIR="$CONFIG_DIR" bash "$0" ) >/dev/null 2>&1 </dev/null &
     exit 0 ;;
-  queue:settle) settle; exit 0 ;;
-  queue:*) flash_active && exit 0; queue; exit 0 ;;
-  budget:*) budget; exit 0 ;;
+  agents:settle) agents; exit 0 ;;
+  agents:*) flash_active && exit 0; agents; exit 0 ;;
   load:*)
     L="$(/usr/sbin/sysctl -n vm.loadavg | awk '{printf "%d", $2 + 0.5}')"
     $SB --set load icon.color="$(tier "$L" 40 60)"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # claude-done <merged|failed|stalled> [label]  (tyler-os #1424)
-# Tells the bar a Claude/Donna job ended: the queue pill flashes green (merged) or red (failed, stalled) for about 8 s, then settles.
+# Tells the bar a Claude/Donna job ended: the agents pill flashes green (merged) or red (failed, stalled) for about 8 s, then settles.
 # One line at the end of a job:   sketchybar/bin/claude-done merged "Agent status pills"
 case "${1:-}" in
   merged|failed|stalled) ;;
