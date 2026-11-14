@@ -142,3 +142,9 @@ class PillStatusTest(unittest.TestCase):
         self.assertEqual(p.parse_force("cpu=red, ram=yellow"), {"cpu": 2, "ram": 1})
         self.assertEqual(p.parse_force(""), {})
         self.assertEqual(p.pill_levels({"cpu": 1, "ram": 1, "gpu": 1}, {}, 1, {"ram": 2})["ram"], 2)
+
+    def test_system_watts_wrapped(self):
+        # A wrapped unsigned SystemLoad once put 18446744073709548W on the pill (tyler-os #1440): fall back to volts x amps.
+        self.assertEqual(p.system_watts({"system_load": 18446744073709548000, "voltage": 12845, "amperage": -279}), 4)
+        self.assertEqual(p.system_watts({"system_load": 9611}), 10)
+        self.assertIsNone(p.system_watts({}))

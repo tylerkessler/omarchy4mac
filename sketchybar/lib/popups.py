@@ -352,9 +352,12 @@ def parse_force(text: str) -> dict:
 
 
 def system_watts(b: dict) -> int | None:
-    """Whole watts the Mac draws: SystemLoad when ioreg has it, else |battery volts x amps|."""
-    if b.get("system_load"):
-        return round(b["system_load"] / 1000)
+    """Whole watts the Mac draws: SystemLoad when ioreg has it, else |battery volts x amps|.
+    SystemLoad sometimes reads as a wrapped unsigned 64-bit number (18446744073709548W on the pill, tyler-os #1440): anything outside
+    1-500 W is treated as missing."""
+    load = b.get("system_load")
+    if load and 1000 <= load <= 500_000:
+        return round(load / 1000)
     if b.get("voltage") and b.get("amperage"):
         return round(abs(b["amperage"]) * b["voltage"] / 1e6)
     return None

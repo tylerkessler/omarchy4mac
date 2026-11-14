@@ -350,14 +350,13 @@ sketchybar --add item clock_right right \
                  click_script='open "x-apple.systempreferences:com.apple.Date-Time-Settings.extension"'
 
 
-# Coding-agent usage: today's Claude Code spend, hidden at zero (v4 bar).
+# Coding agents: today's Claude Code spend · running/queued jobs · 5-hour budget, one pill. Script, click and popup are set in
+# items/agent_status.sh (plugins/agent_pills.sh, tyler-os #1440).
 sketchybar --add item agents right \
            --set agents \
                  drawing=off \
                  update_freq=30 \
-                 updates=on \
-                 script="$PLUGIN_DIR/agents.sh" \
-                 click_script="open -na Ghostty --args -e $HOME/.local/bin/omarchy-tui bunx ccusage daily"
+                 updates=on
 
 # ---------- Right group popups (tyler-os #1419): CPU/RAM pill, music control, battery detail ----------
 # One shared pill look (white icon and text, own accent, no glow or shadow). Clicking a pill opens its popup; a second click or the
@@ -435,6 +434,17 @@ sketchybar --add bracket vibe_center clock weather standup_center \
 
 sketchybar --add bracket vibe_right agents clock_right standup power_flow battery \
            --set vibe_right $(pill_args "$SUN_4")
+
+# ---------- Fit guard (tyler-os #1440): left and right never overlap ----------
+# lib/fit.py measures the gap between the two groups and hides optional items when they meet (session files, touch grass, load dot,
+# music icon, in that order), bringing them back once there is room. Never drawn itself. `python3 lib/fit.py status` shows what it hid.
+sketchybar --add item fit left \
+           --set fit \
+                 drawing=off \
+                 updates=on \
+                 update_freq=15 \
+                 script="python3 $CONFIG_DIR/lib/fit.py" \
+           --subscribe fit front_app_switched spotify_change media_change display_change system_woke
 
 # ---------- Force first run ----------
 sketchybar --update
