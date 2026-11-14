@@ -21,7 +21,9 @@ on-focused-monitor-changed = [
 # 4 windows as a 2x2 grid instead of 4 columns, and puts a grid that fell to 3 back to a row (tyler-os#1267).
 on-focus-changed = [
   'move-mouse window-lazy-center',
-  'exec-and-forget /bin/bash -c "$HOME/Scripts/tyler-os-live/dotfiles/bin/tkos-grid"'
+  'exec-and-forget /bin/bash -c "$HOME/Scripts/tyler-os-live/dotfiles/bin/tkos-grid"',
+  # Ghostty activated from another app -> fullscreen like alt-f (tyler-os#1426)
+  'exec-and-forget /Users/tylerkessler/.local/bin/ghostty-autofull'
 ]
 
 # Notify SketchyBar when workspace focus changes
