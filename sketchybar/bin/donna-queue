@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# donna-queue  (tyler-os #1424): tell the bar the Donna queue changed (a job launched, finished or a watcher started or ended).
+# The queue pill recounts on this event; without it, it recounts at most once a minute.
+exec /opt/homebrew/bin/sketchybar --trigger donna_queue
