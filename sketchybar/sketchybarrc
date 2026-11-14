@@ -44,9 +44,9 @@ default=(
   icon.padding_right=6
   label.padding_left=4
   label.padding_right=6
-  icon.shadow.drawing=on
-  icon.shadow.distance=2
-  icon.shadow.color="$GLOW"
+  icon.shadow.drawing=off
+  label.shadow.drawing=off
+  background.shadow.drawing=off
   background.corner_radius=10
   background.height=28
 )
@@ -60,18 +60,31 @@ sketchybar --add item logo left \
            --set logo \
                  icon="󰣇" \
                  icon.color="$ACCENT" \
+                 icon.font="Hack Nerd Font:Bold:16.5" \
                  icon.padding_left=8 \
                  icon.padding_right=8 \
-                 icon.shadow.drawing=on \
-                 icon.shadow.distance=2 \
-                 icon.shadow.color="$GLOW" \
+                 icon.shadow.drawing=off \
                  label.drawing=off \
                  background.drawing=off \
-                 update_freq=120 \
                  updates=when_shown \
                  script="$PLUGIN_DIR/logo.sh" \
                  click_script="/opt/homebrew/bin/hs -c 'omarchyMenu()'" \
            --subscribe logo system_woke
+
+# ---------- TK monogram, right of the logo: colour = the TK OS favicon's status tone (tyler-os #1418) ----------
+# agent_status.sh (run by the agents item) repaints it only when the tone changes. Click = TKOS shortcuts in KeySheet.
+sketchybar --add item tk left \
+           --set tk \
+                 icon="TK" \
+                 icon.font="Hack Nerd Font:Bold:16.5" \
+                 icon.color=0xff5b9dff \
+                 icon.padding_left=4 \
+                 icon.padding_right=8 \
+                 icon.shadow.drawing=off \
+                 label.drawing=off \
+                 background.drawing=off \
+                 padding_left=0 \
+                 click_script="$HOME/.local/bin/keysheet tkos"
 
 # ---------- Claudia: her face, status, menu and voice chat (tyler-os coach/claudia_bar.py, issue #913) ----------
 # Left click = talk (then type), right click = her menu. The item, badge and popup are built by `claudia_bar.py setup`.
@@ -335,7 +348,8 @@ sketchybar --add item clock_right right \
 sketchybar --add item agents right \
            --set agents \
                  drawing=off \
-                 update_freq=900 \
+                 update_freq=30 \
+                 updates=on \
                  script="$PLUGIN_DIR/agents.sh" \
                  click_script="open -na Ghostty --args -e $HOME/.local/bin/omarchy-tui bunx ccusage daily"
 

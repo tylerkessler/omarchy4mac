@@ -12,20 +12,19 @@ elif [ "$HOUR" -ge 14 ] && [ "$HOUR" -lt 17 ]; then ICON_COLOR="$SPACE_3"
 elif [ "$HOUR" -ge 17 ] && [ "$HOUR" -lt 20 ]; then ICON_COLOR="$SPACE_4"
 else ICON_COLOR="$SPACE_5"; fi
 ICON_COLOR="${ICON_COLOR:-${PINK:-$MAGENTA}}"
-ICON_GLOW="0x80${ICON_COLOR:4}"
 
 source "$CONFIG_DIR/plugins/displays.sh"
 
 if [ "$BUILTIN" != "-" ]; then
   sketchybar --set clock_right drawing=on associated_display="$BUILTIN" \
-                   icon="$ICON" icon.color="$ICON_COLOR" icon.shadow.color="$ICON_GLOW" label="$LABEL" label.color="$FG"
+                   icon="$ICON" icon.color="$ICON_COLOR" label="$LABEL" label.color="$FG"
 else
   sketchybar --set clock_right drawing=off
 fi
 
 if [ "$OTHERS" != "-" ]; then
   sketchybar --set clock drawing=on associated_display="$OTHERS" \
-                   icon="$ICON" icon.color="$ICON_COLOR" icon.shadow.color="$ICON_GLOW" label="$LABEL" label.color="$FG"
+                   icon="$ICON" icon.color="$ICON_COLOR" label="$LABEL" label.color="$FG"
 else
   sketchybar --set clock drawing=off
 fi
