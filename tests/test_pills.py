@@ -23,9 +23,14 @@ class WidthTest(unittest.TestCase):
 
     def test_short_title_fits_exactly_and_does_not_scroll(self):
         pl = pc.plan({"state": "playing", "name": "Money", "artist": "Dire Straits", "saved": "0"})
-        self.assertEqual(pl["max_chars"], len("Dire Straits - Money"))
+        self.assertEqual(pl["max_chars"], len("Money"))
         self.assertFalse(pl["scrolls"])
-        self.assertEqual(pl["width"], pc.label_width(len("Dire Straits - Money")))
+        self.assertEqual(pl["width"], pc.label_width(len("Money")))
+
+    def test_the_pill_shows_the_title_only_never_the_artist(self):
+        pl = pc.plan({"state": "playing", "name": "Wait till you see it", "artist": "AstraBlueAI", "saved": "0"})
+        self.assertEqual(pl["text"], "Wait till you see it")
+        self.assertEqual(pc.plan({"state": "playing", "name": "", "artist": "AstraBlueAI"})["text"], "Spotify")
 
     def test_a_title_longer_than_the_32_char_old_max_still_fits_now(self):
         pl = pc.plan({"state": "playing", "name": "x" * 50, "artist": "Artist", "saved": "?"})
@@ -59,7 +64,7 @@ class StateTest(unittest.TestCase):
 
     def test_nothing_playing_keeps_the_pill_with_the_last_song_dimmed(self):
         pl = pc.plan({"state": "idle", "name": "S", "artist": "A", "saved": "1"})
-        self.assertEqual(pl["text"], "A - S")
+        self.assertEqual(pl["text"], "S")
         self.assertEqual(pl["label_color"], pc.with_alpha(pc.FG, 0x73))
         self.assertFalse(pl["show_next"] or pl["show_star"])
         self.assertTrue(pl["show_play"])
@@ -164,6 +169,23 @@ class ConfigTest(unittest.TestCase):
         plug = (ROOT / "plugins/aerospace.sh").read_text()
         self.assertIn("background.drawing=off", plug)
         self.assertNotIn("background.drawing=on", plug)
+
+    def test_music_icons_are_never_empty(self):
+        """An empty icon still draws its padding: the blank gap in the music pill (tyler-os #1436)."""
+        rc = (ROOT / "sketchybarrc").read_text()
+        for item in ("spotify", "spotify_play", "spotify_next", "spotify_star", "music_pop"):
+            block = rc[rc.index(f"--set {item} \\"):]
+            icon = re.search(r'icon="([^"]*)"', block).group(1)
+            self.assertTrue(icon, item)
+
+    def test_keyboard_is_a_bare_logo_after_tk(self):
+        keys = (ROOT / "items/keys.sh").read_text()
+        self.assertIn("background.drawing=off", keys)
+        self.assertNotIn("pill_item_args", keys)
+        self.assertNotIn("border", keys)
+        rc = (ROOT / "sketchybarrc").read_text()
+        self.assertIn("sketchybar --move keys after tk", rc)
+        self.assertLess(rc.index("--move tk after logo"), rc.index("--move keys after tk"))
 
     def test_no_polling_osascript_for_spotify(self):
         for f in ("spotify.sh", "spotify_click.sh", "spotify_star.sh", "spotify_view.py"):

@@ -92,8 +92,13 @@ python3 "${TKOS_CLAUDIA_BAR:-$HOME/Scripts/tyler-os-live/coach/claudia_bar.py}" 
 # claudia_bar.py moves her right after the logo; put TK back next to the logo so the order is logo, TK, Claudia (tyler-os #1419).
 sketchybar --move tk after logo
 
-# ---------- Keyboard cheat sheet pill, right after Claudia (left order: logo, TK, Claudia, Keyboard, desktop, app, Spotify) ----------
+# ---------- Keyboard logo, right after TK (left order: logo, TK, Keyboard, Claudia, desktop, app, Spotify; tyler-os #1437) ----------
 source "$CONFIG_DIR/items/keys.sh"
+sketchybar --move keys after tk
+
+# Gap between Claudia and the desktop pill, the same 8 as music_gap: without it the pill's outline touches her badge (tyler-os #1436).
+sketchybar --add item left_gap left \
+           --set left_gap width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
 
 # ---------- AeroSpace workspace: one digit, the focused desktop (tyler-os #1161) ----------
 # Just the number, no chip or circle: drawn halfway between the desktop's sunset step and white, semi-transparent, so the bar
@@ -156,6 +161,8 @@ popup_rows() {   # popup_rows NAME COUNT: label-only monospace rows, hidden unti
 # plugins/spotify.sh -> spotify_view.py asks coach/spotify_library.py `bar` (cached, rate limited, no osascript) every 5 s and on the
 # Mac app's track-change events. It is as long as the song title, cut with an ellipsis past the max width:
 # static, never scrolled or animated (tyler-os #1425). Nothing playing = the last song dimmed, or "Spotify". Clicks (play/pause, next, star) use the Web API too.
+# The label is the track title only, no artist (tyler-os #1436). The Spotify, play, next and chevron glyphs are Nerd Font private-use
+# characters: an editor that drops them leaves icon="" and SketchyBar still draws the icon padding as an empty gap.
 sketchybar --add event spotify_change "com.spotify.client.PlaybackStateChanged"
 sketchybar --add event spotify_refresh
 # Static and symmetric (tyler-os #1425): no scroll, no tween; 12 px inside the hairline on both ends (spotify's icon on the left,
@@ -163,7 +170,7 @@ sketchybar --add event spotify_refresh
 sketchybar --add item spotify left \
            --set spotify \
                  drawing=on \
-                 icon="" \
+                 icon="" \
                  icon.color="$FG" \
                  icon.padding_left=12 \
                  icon.padding_right=6 \
@@ -189,7 +196,7 @@ sketchybar --add item spotify_play left \
                  icon.padding_left=5 \
                  icon.padding_right=5 \
                  drawing=on \
-                 icon="" \
+                 icon="" \
                  icon.color="$FG" \
                  icon.font="Hack Nerd Font:Bold:12.0" \
                  label.drawing=off \
@@ -203,7 +210,7 @@ sketchybar --add item spotify_next left \
                  icon.padding_left=5 \
                  icon.padding_right=5 \
                  drawing=off \
-                 icon="" \
+                 icon="" \
                  icon.color="$FG" \
                  label.drawing=off \
                  background.drawing=off \
@@ -227,7 +234,7 @@ sketchybar --add item spotify_star left \
 # Music popup trigger, the Spotify pill's last control (tyler-os #1419, moved into this pill by #1425 so no lone ♫ circle sits on the right).
 sketchybar --add item music_pop left \
            --set music_pop \
-                 icon="" \
+                 icon="" \
                  icon.color="$FG" \
                  icon.font="Hack Nerd Font:Bold:12.0" \
                  icon.padding_left=5 \
