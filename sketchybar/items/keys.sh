@@ -3,7 +3,7 @@
 # Shared pill look (lib/pill_item.sh), cyan accent. Sourced from sketchybarrc; bin/keysheet does the work.
 sketchybar --add item keys left \
            --set keys \
-                 icon="⌨️" \
+                 icon="⌘" icon.font="Hack Nerd Font:Bold:15.0" \
                  label.drawing=off \
                  click_script="$HOME/.local/bin/keysheet" \
                  $(pill_item_args 0xff63e6e2)

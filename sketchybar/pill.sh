@@ -16,3 +16,10 @@ pill_args() {
   printf 'background.shadow.drawing=off '
   printf 'background.border_color=%s' "${c:-$OVERLAY}"
 }
+
+# popup_args ACCENT -> the properties of a popup panel under a pill (same plum fill, accent outline, no shadow; tyler-os #1419).
+popup_args() {
+  printf 'popup.background.color=%s popup.background.corner_radius=12 popup.background.border_width=%s popup.background.border_color=%s ' \
+    "${PLUM:-$BG_PILL}" "$PILL_BORDER" "${1:-$OVERLAY}"
+  printf 'popup.background.shadow.drawing=off popup.blur_radius=0 popup.y_offset=6'
+}

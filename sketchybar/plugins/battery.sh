@@ -5,7 +5,11 @@
 #               Plugged in but holding (full or at the charge limit): charger watts, still dots (dim).
 #   battery     level glyph tinted by charge, and the percent.
 # One ioreg read per run. It runs every 2 s while power moves (the dot needs the tick) and every 30 s while holding.
-# Click: a terminal with `tyler battery watch` (every device, last report, 24 h sparklines; tyler-os #1150).
+# Click: the battery popup (popup.sh); its last row opens a terminal with `tyler battery watch` (every device, last report, 24 h sparklines; tyler-os #1150).
+case "$SENDER" in
+  mouse.exited.global) exec "$CONFIG_DIR/plugins/popup.sh" close battery ;;
+  mouse.*) exit 0 ;;
+esac
 source "$CONFIG_DIR/colors.sh"
 MINT="${MINT:-$GREEN}"; GOLD="${GOLD:-$YELLOW}"; DIM="${DIM:-$COMMENT}"; SUN_1="${SUN_1:-$ORANGE}"   # light themes skip live_vibe.sh
 
@@ -41,3 +45,6 @@ FLOW_DRAW=on
 sketchybar --set "$NAME" icon="$ICON" icon.color="$LEVEL_COLOR" label="${PCT}%" update_freq="$FREQ" \
            --set power_flow drawing="$FLOW_DRAW" icon="${WATTS}W" icon.color="$FLOW_COLOR" \
                  label="${FRAMES[$TICK]}" label.color="$FLOW_COLOR"
+# Popup (tyler-os #1419): redrawn on this tick only while it is open.
+[ "$(cat "$HOME/.cache/omarchy4mac/popup_open" 2>/dev/null)" = "battery" ] && \
+  /usr/bin/perl -e 'alarm 5; exec @ARGV' /usr/bin/python3 "$CONFIG_DIR/lib/popups.py" fill battery
