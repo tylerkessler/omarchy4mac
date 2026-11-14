@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# AeroSpace on-focus-changed hook: when Ghostty becomes the focused app, go
+# AeroSpace fullscreen (same as alt-f). Idempotent, never toggles off. Only fires
+# on a switch from another app, so alt-f out of fullscreen sticks until the next
+# activation (tyler-os#1426).
+AS=/opt/homebrew/bin/aerospace
+STATE="${TMPDIR:-/tmp}/ghostty-autofull.last"
+out=$("$AS" list-windows --focused --format '%{app-bundle-id}|%{window-is-fullscreen}' 2>/dev/null) || exit 0
+app=${out%%|*}
+full=${out##*|}
+prev=$(cat "$STATE" 2>/dev/null)
+printf '%s' "$app" > "$STATE"
+[ "$app" = com.mitchellh.ghostty ] || exit 0
+[ "$prev" = com.mitchellh.ghostty ] && exit 0
+[ "$full" = true ] && exit 0
+exec "$AS" fullscreen on
