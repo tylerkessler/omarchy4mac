@@ -89,9 +89,11 @@ sketchybar --add item tk left \
 # ---------- Claudia: her face, status, menu and voice chat (tyler-os coach/claudia_bar.py, issue #913) ----------
 # Left click = talk (then type), right click = her menu. The item, badge and popup are built by `claudia_bar.py setup`.
 python3 "${TKOS_CLAUDIA_BAR:-$HOME/Scripts/tyler-os-live/coach/claudia_bar.py}" setup
+# claudia_bar.py moves her right after the logo; put TK back next to the logo so the order is logo, TK, Claudia (tyler-os #1419).
+sketchybar --move tk after logo
 
-# ---------- Computer-use banner: red while an agent drives the Mac, green with totals when hands come off (tyler cu) ----------
-python3 "${TKOS_CU_BAR:-$HOME/Scripts/tyler-os-live/coach/cu_bar.py}" setup
+# ---------- Keyboard cheat sheet pill, right after Claudia (left order: logo, TK, Claudia, Keyboard, desktop, app, Spotify) ----------
+source "$CONFIG_DIR/items/keys.sh"
 
 # ---------- AeroSpace workspace: one digit, the focused desktop (tyler-os #1161) ----------
 # Just the number, no chip or circle: drawn halfway between the desktop's sunset step and white, semi-transparent, so the bar
@@ -225,7 +227,9 @@ sketchybar --add item touch_grass left \
                  $(pill_item_args 0xff5fd35f) \
            --subscribe touch_grass system_woke
 
-source "$CONFIG_DIR/items/keys.sh"   # keyboard cheat sheet pill
+# ---------- Computer-use banner: red while an agent drives the Mac, green with totals when hands come off (tyler cu) ----------
+# Created after the logo/TK/Claudia/Keyboard/desktop/Spotify run so it never sits between them (tyler-os #1419).
+python3 "${TKOS_CU_BAR:-$HOME/Scripts/tyler-os-live/coach/cu_bar.py}" setup
 
 # ---------- Center: indicators · clock · weather · updates · theme ----------
 # Indicators show only while their state is on (v4 bar). Pinned to the
@@ -294,8 +298,10 @@ sketchybar --add item battery right \
                  icon.padding_right=2 \
                  label.color="$FG" \
                  script="$PLUGIN_DIR/battery.sh" \
-                 click_script="$PLUGIN_DIR/battery_click.sh" \
-           --subscribe battery system_woke power_source_change
+                 click_script="$PLUGIN_DIR/popup.sh toggle battery" \
+                 popup.align=right \
+                 $(popup_args "$SUN_4") \
+           --subscribe battery system_woke power_source_change mouse.exited.global
 
 # Power flow, just left of the battery: watts + a dot travelling into the battery (charging) or out of it (on battery).
 # battery.sh fills it; a click opens the same terminal as the battery.
@@ -311,7 +317,7 @@ sketchybar --add item power_flow right \
                  label.padding_right=0 \
                  padding_left=0 \
                  padding_right=0 \
-                 click_script="$PLUGIN_DIR/battery_click.sh"
+                 click_script="$PLUGIN_DIR/popup.sh toggle battery"
 
 # Right-side clock + theme name — the leftmost pair of the right cluster, i.e.
 # immediately in front of the battery. These are the built-in display's variant:
@@ -352,6 +358,53 @@ sketchybar --add item agents right \
                  updates=on \
                  script="$PLUGIN_DIR/agents.sh" \
                  click_script="open -na Ghostty --args -e $HOME/.local/bin/omarchy-tui bunx ccusage daily"
+
+# ---------- Right group popups (tyler-os #1419): CPU/RAM pill, music control, battery detail ----------
+# One shared pill look (white icon and text, own accent, no glow or shadow). Clicking a pill opens its popup; a second click or the
+# mouse leaving closes it, and only one is open at a time (plugins/popup.sh). Rows are drawn by lib/popups.py, and only while open.
+# The popup row names are cpu.rN / music_pop.rN / battery.rN; music_pop.art is the album cover.
+popup_rows() {   # popup_rows NAME COUNT: label-only monospace rows, hidden until lib/popups.py fills them
+  local n="$1" i
+  for i in $(seq 1 "$2"); do
+    sketchybar --add item "$n.r$i" "popup.$n" \
+               --set "$n.r$i" drawing=off icon.drawing=off label.font="Hack Nerd Font:Bold:12.0" label.width=340 label.align=left background.height=16 y_offset=0 \
+                     label.padding_left=10 label.padding_right=10 label.color="$FG" background.drawing=off
+  done
+}
+
+sketchybar --add item cpu_gap right --set cpu_gap width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
+sketchybar --add item cpu right \
+           --set cpu \
+                 icon="" \
+                 label="CPU --% RAM --% GPU --%" \
+                 update_freq=8 \
+                 updates=on \
+                 script="$PLUGIN_DIR/cpu.sh" \
+                 click_script="$PLUGIN_DIR/popup.sh toggle cpu" \
+                 popup.align=right \
+                 $(popup_args "${CYAN}") \
+                 $(pill_item_args "${CYAN}") \
+           --subscribe cpu mouse.exited.global system_woke
+popup_rows cpu 15
+sketchybar --add item music_gap_r right --set music_gap_r width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
+sketchybar --add item music_pop right \
+           --set music_pop \
+                 icon="" \
+                 label.drawing=off \
+                 icon.padding_right=8 \
+                 update_freq=0 \
+                 script="$PLUGIN_DIR/music_pop.sh" \
+                 click_script="$PLUGIN_DIR/popup.sh toggle music_pop" \
+                 popup.align=right \
+                 $(popup_args "${SPOTIFY_GREEN:-$GREEN}") \
+                 $(pill_item_args "${SPOTIFY_GREEN:-$GREEN}") \
+           --subscribe music_pop mouse.exited.global
+sketchybar --add item music_pop.art popup.music_pop \
+           --set music_pop.art drawing=off icon.drawing=off label.drawing=off width=340 \
+                 background.height=150 background.image.scale=0.5 background.image.drawing=off background.color=0x00000000
+popup_rows music_pop 8
+popup_rows battery 8
+sketchybar --set battery.r8 click_script="$PLUGIN_DIR/battery_click.sh"
 
 # ---------- Instruction files shaping the focused LLM session (tyler-os coach/session_md.py, issue #1285) ----------
 # Added after every other right-hand item, so they land in the empty stretch left of the agents pill. Hidden until an LLM tab is focused.
