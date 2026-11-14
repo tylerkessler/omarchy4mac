@@ -41,6 +41,11 @@ class WidthTest(unittest.TestCase):
     def test_past_the_max_scrolls(self):
         self.assertEqual(ex.fit("a" * 200), (ex.label_width(ex.MAX_CHARS), ex.MAX_CHARS, True))
 
+    def test_width_leaves_room_for_label_padding(self):
+        # "Touch grass · 3h 05m" lost its last letter at 157 pt; SketchyBar counts the 4 + 6 label padding inside label.width (#1442).
+        self.assertEqual(ex.label_width(20), 167)
+        self.assertEqual(ex.label_width(0), 0)
+
     def test_condensed_shrinks(self):
         self.assertEqual(ex.fit("a" * 50, condensed=True)[1], ex.CONDENSED_CHARS)
 
