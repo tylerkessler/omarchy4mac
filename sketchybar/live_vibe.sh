@@ -40,12 +40,12 @@ export GLOW_PINK="0x80ff6392"
 # One sunset gradient across the bar, left to right (tyler-os #1425): each pill takes the stop at its place, so neighbours blend.
 # Static, never animated. lib/palette.py reads these same lines for the Python-drawn pills.
 export SUN_LOGO="0xffffb52e"   # the Omarchy logo: a still yellow-orange sun, the left anchor
-export GRAD_1="0xffff9a5c"     # peach: desktop + app
-export GRAD_2="0xffff8b4b"     # orange: Spotify
-export GRAD_3="0xffff6fa3"     # pink: YouTube, touch grass
-export GRAD_4="0xffe066ff"     # magenta: computer use, clock
-export GRAD_5="0xff9d7bff"     # violet: agent pills, music, CPU
-export GRAD_6="0xffffca00"     # gold: battery island, the right anchor
+export GRAD_1="0xffff9a5c"     # peach: TK, keyboard
+export GRAD_2="0xffff8b4b"     # orange: desktop + app
+export GRAD_3="0xffff6fa3"     # pink: Spotify
+export GRAD_4="0xffe066ff"     # magenta: YouTube, touch grass, clock
+export GRAD_5="0xff9d7bff"     # violet: computer use, CPU + load
+export GRAD_6="0xffffca00"     # gold: agents + battery island, the right anchor
 # Status, in sunset: calm lavender (was green), amber (was yellow), deep coral (was red).
 export STATUS_OK="0xffc8b6ff"
 export STATUS_WARN="0xffffb52e"
