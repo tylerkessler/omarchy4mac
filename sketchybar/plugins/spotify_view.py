@@ -3,7 +3,7 @@
 
 Run by plugins/spotify.sh every few seconds (the API call itself is cached and rate limited in spotify_library.py)
 and straight away on a track-change event.  Argument: --fresh for an event, so a cached answer is not reused.
-The pill grows and shrinks with a tanh animation when the text length changes.
+The pill is as long as its text, static: no animation, no scrolling (tyler-os #1425).
 """
 from __future__ import annotations
 
@@ -21,7 +21,6 @@ LIB = Path(os.environ.get("TKOS_SPOTIFY_LIB", HOME / "Scripts/tyler-os-live/coac
 STATE = Path(os.environ.get("TKOS_STATE_DIR", HOME / ".local/state/tyler-os-vault"))
 MEMORY = HOME / ".cache" / "omarchy4mac" / "spotify_pill.json"      # the last width, to animate from
 SB = os.environ.get("SKETCHYBAR", "/opt/homebrew/bin/sketchybar")
-FRAMES = 18
 
 
 def run(cmd: list[str], timeout: int = 8) -> str:
@@ -62,9 +61,8 @@ def commands(pl: dict, prev_width: int | None) -> list[list[str]]:
              "--set", "spotify_play", f"drawing={on(pl['show_play'])}", f"icon={pl['play_icon']}", f"icon.color={pl['icon_color']}",
              "--set", "spotify_next", f"drawing={on(pl['show_next'])}", f"icon.color={pl['icon_color']}",
              "--set", "spotify_star", f"drawing={on(pl['show_star'])}", f"icon={pl['star_icon']}", f"icon.color={pl['star_color']}"]
-    if prev_width is None or prev_width == pl["width"]:
-        return [first + ["--set", "spotify", f"label.width={pl['width']}"]]
-    return [first + ["--animate", "tanh", str(FRAMES), "--set", "spotify", f"label.width={pl['width']}"]]
+    # Static (Tyler, 2026-11-14, tyler-os #1425): the width jumps to the text, no tween, no scroll.
+    return [first + ["--set", "spotify", "scroll_texts=off", f"label.width={pl['width']}"]]
 
 
 def main(argv: list[str]) -> int:
@@ -77,7 +75,7 @@ def main(argv: list[str]) -> int:
             p = {**ev, "state": ev["state"]}
         elif p["state"] == "error":
             p = {**p, "state": "idle"}
-    pl = pillcalc.plan(p, condensed())
+    pl = pillcalc.plan(p)   # the computer-use pill is one short pill now, so Spotify keeps its room
     try:
         prev = json.loads(MEMORY.read_text()).get("width")
     except Exception:

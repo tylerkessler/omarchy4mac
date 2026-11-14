@@ -55,11 +55,11 @@ sketchybar --default "${default[@]}"
 # ---------- Custom events ----------
 sketchybar --add event aerospace_workspace_change
 
-# ---------- Logo: opens the Omarchy menu (v4 bar, leftmost) ----------
+# ---------- Logo: opens the Omarchy menu (v4 bar, leftmost). A still yellow-orange sun, the gradient's left anchor (tyler-os #1425) ----------
 sketchybar --add item logo left \
            --set logo \
                  icon="󰣇" \
-                 icon.color="$ACCENT" \
+                 icon.color="${SUN_LOGO:-$ACCENT}" \
                  icon.font="Hack Nerd Font:Bold:16.5" \
                  icon.padding_left=8 \
                  icon.padding_right=8 \
@@ -77,7 +77,7 @@ sketchybar --add item tk left \
            --set tk \
                  icon="TK" \
                  icon.font="Hack Nerd Font:Bold:16.5" \
-                 icon.color=0xff5b9dff \
+                 icon.color="${GRAD_1:-$FG}" \
                  icon.padding_left=4 \
                  icon.padding_right=8 \
                  icon.shadow.drawing=off \
@@ -142,22 +142,39 @@ sketchybar --add item music_gap left \
                  label.drawing=off \
                  background.drawing=off
 
+# Popup rows (tyler-os #1419): label-only monospace rows, hidden until lib/popups.py fills them. The row names are NAME.rN.
+popup_rows() {   # popup_rows NAME COUNT: label-only monospace rows, hidden until lib/popups.py fills them
+  local n="$1" i
+  for i in $(seq 1 "$2"); do
+    sketchybar --add item "$n.r$i" "popup.$n" \
+               --set "$n.r$i" drawing=off icon.drawing=off label.font="Hack Nerd Font:Bold:12.0" label.width=340 label.align=left background.height=16 y_offset=0 \
+                     label.padding_left=10 label.padding_right=10 label.color="$FG" background.drawing=off
+  done
+}
+
 # ---------- Spotify pill: always shown, driven by the Spotify Web API (tyler-os #1381) ----------
 # plugins/spotify.sh -> spotify_view.py asks coach/spotify_library.py `bar` (cached, rate limited, no osascript) every 5 s and on the
-# Mac app's track-change events. It grows and shrinks with the song title (tanh), scrolls only past the max width, and condenses while
-# the computer-use banner is on. Nothing playing = the last song dimmed, or "Spotify". Clicks (play/pause, next, star) use the Web API too.
+# Mac app's track-change events. It is as long as the song title, cut with an ellipsis past the max width:
+# static, never scrolled or animated (tyler-os #1425). Nothing playing = the last song dimmed, or "Spotify". Clicks (play/pause, next, star) use the Web API too.
 sketchybar --add event spotify_change "com.spotify.client.PlaybackStateChanged"
 sketchybar --add event spotify_refresh
+# Static and symmetric (tyler-os #1425): no scroll, no tween; 12 px inside the hairline on both ends (spotify's icon on the left,
+# the music popup's chevron on the right). Every control in between has zero outer padding so only its icon padding counts.
 sketchybar --add item spotify left \
            --set spotify \
                  drawing=on \
                  icon="" \
                  icon.color="$FG" \
+                 icon.padding_left=12 \
+                 icon.padding_right=6 \
+                 padding_left=0 \
+                 padding_right=0 \
                  label="Spotify" \
                  label.color="$FG" \
+                 label.padding_left=0 \
+                 label.padding_right=8 \
                  label.max_chars=7 \
-                 scroll_texts=on \
-                 label.scroll_duration=200 \
+                 scroll_texts=off \
                  background.drawing=off \
                  update_freq=5 \
                  updates=on \
@@ -167,6 +184,10 @@ sketchybar --add item spotify left \
 
 sketchybar --add item spotify_play left \
            --set spotify_play \
+                 padding_left=0 \
+                 padding_right=0 \
+                 icon.padding_left=5 \
+                 icon.padding_right=5 \
                  drawing=on \
                  icon="" \
                  icon.color="$FG" \
@@ -177,6 +198,10 @@ sketchybar --add item spotify_play left \
 
 sketchybar --add item spotify_next left \
            --set spotify_next \
+                 padding_left=0 \
+                 padding_right=0 \
+                 icon.padding_left=5 \
+                 icon.padding_right=5 \
                  drawing=off \
                  icon="" \
                  icon.color="$FG" \
@@ -188,6 +213,10 @@ sketchybar --add item spotify_next left \
 # (tyler-os coach/spotify_library.py); until then the star stays hidden and the pill says "Spotify - connect".
 sketchybar --add item spotify_star left \
            --set spotify_star \
+                 padding_left=0 \
+                 padding_right=0 \
+                 icon.padding_left=5 \
+                 icon.padding_right=5 \
                  drawing=off \
                  icon="☆" \
                  icon.color="$FG" \
@@ -195,7 +224,30 @@ sketchybar --add item spotify_star left \
                  background.drawing=off \
                  click_script="$PLUGIN_DIR/spotify_star.sh"
 
-# ---------- YouTube pill: only while a YouTube video is open in Brave (tyler-os #1381) ----------
+# Music popup trigger, the Spotify pill's last control (tyler-os #1419, moved into this pill by #1425 so no lone ♫ circle sits on the right).
+sketchybar --add item music_pop left \
+           --set music_pop \
+                 icon="" \
+                 icon.color="$FG" \
+                 icon.font="Hack Nerd Font:Bold:12.0" \
+                 icon.padding_left=5 \
+                 icon.padding_right=12 \
+                 padding_left=0 \
+                 padding_right=0 \
+                 label.drawing=off \
+                 background.drawing=off \
+                 update_freq=0 \
+                 script="$PLUGIN_DIR/music_pop.sh" \
+                 click_script="$PLUGIN_DIR/popup.sh toggle music_pop" \
+                 popup.align=left \
+                 $(popup_args "${GRAD_2:-$ACCENT}") \
+           --subscribe music_pop mouse.exited.global
+sketchybar --add item music_pop.art popup.music_pop \
+           --set music_pop.art drawing=off icon.drawing=off label.drawing=off width=340 \
+                 background.height=150 background.image.scale=0.5 background.image.drawing=off background.color=0x00000000
+popup_rows music_pop 8
+
+# ---------- YouTube pill: only while a YouTube video is open in Brave (tyler-os #1381). Sunset pink, no brand red (#1425) ----------
 # Shared pill look (lib/pill_item.sh): white logo and title, YouTube red accent, grows and shrinks with the title, condenses
 # while the computer-use banner is on. plugins/youtube.sh reads Brave's window titles from AeroSpace on front-app and wake events plus a 15 s backstop.
 sketchybar --add item youtube left \
@@ -204,12 +256,11 @@ sketchybar --add item youtube left \
                  icon="" \
                  label.width=0 \
                  label.max_chars=40 \
-                 label.scroll_duration=200 \
                  update_freq=15 \
                  updates=on \
                  script="$PLUGIN_DIR/youtube.sh" \
                  click_script="open -a 'Brave Browser'" \
-                 $(pill_item_args 0xffff0000) \
+                 $(pill_item_args "${GRAD_3:-$ACCENT}") \
            --subscribe youtube front_app_switched system_woke
 
 # ---------- Touch grass pill: 2+ hours of active use without a 10-minute break (tyler-os #1381) ----------
@@ -224,7 +275,7 @@ sketchybar --add item touch_grass left \
                  updates=on \
                  script="$PLUGIN_DIR/touch_grass.sh" \
                  click_script="python3 $CONFIG_DIR/lib/extras.py grass-snooze; sketchybar --set touch_grass drawing=off" \
-                 $(pill_item_args 0xff5fd35f) \
+                 $(pill_item_args "${GRAD_3:-$ACCENT}") \
            --subscribe touch_grass system_woke
 
 # ---------- Computer-use banner: red while an agent drives the Mac, green with totals when hands come off (tyler cu) ----------
@@ -300,7 +351,7 @@ sketchybar --add item battery right \
                  script="$PLUGIN_DIR/battery.sh" \
                  click_script="$PLUGIN_DIR/popup.sh toggle battery" \
                  popup.align=right \
-                 $(popup_args "$SUN_4") \
+                 $(popup_args "${GRAD_6:-$SUN_4}") \
            --subscribe battery system_woke power_source_change mouse.exited.global
 
 # Power flow, just left of the battery: watts + a dot travelling into the battery (charging) or out of it (on battery).
@@ -362,14 +413,6 @@ sketchybar --add item agents right \
 # One shared pill look (white icon and text, own accent, no glow or shadow). Clicking a pill opens its popup; a second click or the
 # mouse leaving closes it, and only one is open at a time (plugins/popup.sh). Rows are drawn by lib/popups.py, and only while open.
 # The popup row names are cpu.rN / music_pop.rN / battery.rN; music_pop.art is the album cover.
-popup_rows() {   # popup_rows NAME COUNT: label-only monospace rows, hidden until lib/popups.py fills them
-  local n="$1" i
-  for i in $(seq 1 "$2"); do
-    sketchybar --add item "$n.r$i" "popup.$n" \
-               --set "$n.r$i" drawing=off icon.drawing=off label.font="Hack Nerd Font:Bold:12.0" label.width=340 label.align=left background.height=16 y_offset=0 \
-                     label.padding_left=10 label.padding_right=10 label.color="$FG" background.drawing=off
-  done
-}
 
 sketchybar --add item cpu_gap right --set cpu_gap width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
 # One pill, seven segments (right to left: watts `cpu_w`, GPU value `cpu`, GPU label, RAM value, RAM label, CPU value, CPU label + icon) so each number can
@@ -382,7 +425,7 @@ cpu_seg() {   # cpu_seg NAME LABEL [extra args]
                    background.drawing=off label.color=0xffffffff click_script="$PLUGIN_DIR/popup.sh toggle cpu" "$@"
 }
 cpu_seg cpu_w "--W" label.padding_right=12
-cpu_seg cpu "--%" update_freq=8 updates=on script="$PLUGIN_DIR/cpu.sh" popup.align=right $(popup_args "${CYAN}") label.padding_right=10
+cpu_seg cpu "--%" update_freq=8 updates=on script="$PLUGIN_DIR/cpu.sh" popup.align=right $(popup_args "${GRAD_5:-$CYAN}") label.padding_right=10
 sketchybar --subscribe cpu mouse.exited.global system_woke
 cpu_seg cpu_gl "GPU" label.padding_right=5
 cpu_seg cpu_rv "--%" label.padding_right=10
@@ -390,25 +433,8 @@ cpu_seg cpu_rl "RAM" label.padding_right=5
 cpu_seg cpu_cv "--%" label.padding_right=10
 cpu_seg cpu_cl "CPU" label.padding_right=5 icon.drawing=on icon="" icon.padding_left=12 icon.padding_right=6 icon.color=0xffffffff
 sketchybar --add bracket cpu_pill cpu_w cpu cpu_gl cpu_rv cpu_rl cpu_cv cpu_cl \
-           --set cpu_pill $(pill_args "${CYAN}")
+           --set cpu_pill $(pill_args "${GRAD_5:-$CYAN}")
 popup_rows cpu 15
-sketchybar --add item music_gap_r right --set music_gap_r width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
-sketchybar --add item music_pop right \
-           --set music_pop \
-                 icon="" \
-                 label.drawing=off \
-                 icon.padding_right=8 \
-                 update_freq=0 \
-                 script="$PLUGIN_DIR/music_pop.sh" \
-                 click_script="$PLUGIN_DIR/popup.sh toggle music_pop" \
-                 popup.align=right \
-                 $(popup_args "${SPOTIFY_GREEN:-$GREEN}") \
-                 $(pill_item_args "${SPOTIFY_GREEN:-$GREEN}") \
-           --subscribe music_pop mouse.exited.global
-sketchybar --add item music_pop.art popup.music_pop \
-           --set music_pop.art drawing=off icon.drawing=off label.drawing=off width=340 \
-                 background.height=150 background.image.scale=0.5 background.image.drawing=off background.color=0x00000000
-popup_rows music_pop 8
 popup_rows battery 8
 sketchybar --set battery.r8 click_script="$PLUGIN_DIR/battery_click.sh"
 
@@ -419,21 +445,21 @@ source "$CONFIG_DIR/items/agent_status.sh"
 # Added after every other right-hand item, so they land in the empty stretch left of the agents pill. Hidden until an LLM tab is focused.
 python3 "${TKOS_SESSION_MD:-$HOME/Scripts/tyler-os-live/coach/session_md.py}" setup
 
-# ---------- Islands: the ticker's sunset pills, one design (pill.sh) ----------
+# ---------- Islands: one sunset gradient left to right, one design (pill.sh, tyler-os #1425) ----------
 # Every pill is the same shape with white icon and text; only the accent (hairline + 35% halo of the same hue) differs, left to right:
-# violet, Spotify green, magenta, violet. Light themes skip live_vibe.sh, so each colour falls back to the theme's own.
+# peach, orange, magenta, gold (GRAD_n in live_vibe.sh). Light themes skip live_vibe.sh, so each colour falls back to the theme's own.
 # The left island wears the right pill's violet on every desktop (tyler-os #1336); the desktop number is just a coloured digit.
 sketchybar --add bracket vibe_left space space_sep front_app \
-           --set vibe_left $(pill_args "$SUN_4")
+           --set vibe_left $(pill_args "${GRAD_1:-$SUN_4}")
 
-sketchybar --add bracket vibe_music spotify spotify_play spotify_next spotify_star \
-           --set vibe_music $(pill_args "${SPOTIFY_GREEN:-$GREEN}")
+sketchybar --add bracket vibe_music spotify spotify_play spotify_next spotify_star music_pop \
+           --set vibe_music $(pill_args "${GRAD_2:-$ACCENT}")
 
 sketchybar --add bracket vibe_center clock weather standup_center \
-           --set vibe_center $(pill_args "$SUN_3")
+           --set vibe_center $(pill_args "${GRAD_4:-$SUN_3}")
 
 sketchybar --add bracket vibe_right agents clock_right standup power_flow battery \
-           --set vibe_right $(pill_args "$SUN_4")
+           --set vibe_right $(pill_args "${GRAD_6:-$SUN_4}")
 
 # ---------- Fit guard (tyler-os #1440): left and right never overlap ----------
 # lib/fit.py measures the gap between the two groups and hides optional items when they meet (session files, touch grass, load dot,
