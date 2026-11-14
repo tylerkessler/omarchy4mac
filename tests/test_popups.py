@@ -39,6 +39,9 @@ class CpuMemTest(unittest.TestCase):
         top = "CPU usage: 50.0% user, 20.0% sys, 30.0% idle\nCPU usage: 8.5% user, 4.5% sys, 87.0% idle\n"
         self.assertEqual(p.parse_top_cpu(top), (8.5, 4.5, 87.0))        # the second sample, not the since-boot one
         self.assertIsNone(p.parse_top_cpu("nothing"))
+        io = "      cpu    load average\n us sy id   1m   5m   15m\n 31 31 39  31.73 31.46 29.87\n 38 39 23  31.73 31.46 29.87\n"
+        self.assertEqual(p.parse_iostat_cpu(io), (38.0, 39.0, 23.0))        # the interval row, not the since-boot one
+        self.assertIsNone(p.parse_iostat_cpu("nothing"))
 
     def test_ps_top_five(self):
         out = " 24.1 Brave Browser He\n 12.0 WindowServer\n  3.0 a\n  2.0 b\n  1.0 c\n  0.5 d\n"
@@ -111,3 +114,31 @@ class MusicTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PillStatusTest(unittest.TestCase):
+    def test_thresholds(self):
+        lv = lambda v: p.level_for(v, 60, 85)
+        self.assertEqual([lv(59.9), lv(60), lv(85), lv(85.1)], [0, 1, 1, 2])
+        self.assertEqual([p.level_for(v, 70, 88) for v in (69, 70, 88, 89)], [0, 1, 1, 2])
+
+    def test_hysteresis(self):
+        self.assertEqual(p.next_level(0, 61, 60, 85), 1)       # rising is immediate
+        self.assertEqual(p.next_level(1, 58, 60, 85), 1)       # inside the 3-point band: stays yellow
+        self.assertEqual(p.next_level(1, 56, 60, 85), 0)
+        self.assertEqual(p.next_level(2, 84, 60, 85), 2)
+        self.assertEqual(p.next_level(2, 81, 60, 85), 1)
+        self.assertEqual(p.next_level(2, 30, 60, 85), 0)       # a big drop skips straight to green
+
+    def test_levels_worst_and_pressure(self):
+        v = {"cpu": 10, "ram": 50, "gpu": 70}
+        self.assertEqual(p.pill_levels(v, {}, 1), {"cpu": 0, "ram": 0, "gpu": 1})
+        self.assertEqual(p.pill_levels(v, {}, 2)["ram"], 1)    # memory pressure warn lifts a low percent to yellow
+        self.assertEqual(p.pill_levels(v, {}, 4)["ram"], 2)
+        self.assertEqual(p.pill_levels({"cpu": None, "ram": None, "gpu": None}, {"cpu": 2, "ram": 1, "gpu": 0}, 1), {"cpu": 2, "ram": 1, "gpu": 0})
+
+    def test_force(self):
+        self.assertEqual(p.parse_force("red"), {"cpu": 2, "ram": 2, "gpu": 2})
+        self.assertEqual(p.parse_force("cpu=red, ram=yellow"), {"cpu": 2, "ram": 1})
+        self.assertEqual(p.parse_force(""), {})
+        self.assertEqual(p.pill_levels({"cpu": 1, "ram": 1, "gpu": 1}, {}, 1, {"ram": 2})["ram"], 2)

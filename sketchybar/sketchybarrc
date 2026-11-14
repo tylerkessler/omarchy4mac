@@ -373,18 +373,24 @@ popup_rows() {   # popup_rows NAME COUNT: label-only monospace rows, hidden unti
 }
 
 sketchybar --add item cpu_gap right --set cpu_gap width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
-sketchybar --add item cpu right \
-           --set cpu \
-                 icon="" \
-                 label="CPU --% RAM --% GPU --%" \
-                 update_freq=8 \
-                 updates=on \
-                 script="$PLUGIN_DIR/cpu.sh" \
-                 click_script="$PLUGIN_DIR/popup.sh toggle cpu" \
-                 popup.align=right \
-                 $(popup_args "${CYAN}") \
-                 $(pill_item_args "${CYAN}") \
-           --subscribe cpu mouse.exited.global system_woke
+# One pill, six segments (right to left: GPU value `cpu`, GPU label, RAM value, RAM label, CPU value, CPU label + icon) so each number can
+# wear its own status colour; labels stay white. The bracket `cpu_pill` is the outline and follows the worst of the three (popups.py cpu-tick).
+# The popup hangs off `cpu` (the rightmost segment, same spot as before); a click on any segment toggles it.
+cpu_seg() {   # cpu_seg NAME LABEL [extra args]
+  local n="$1" l="$2"; shift 2
+  sketchybar --add item "$n" right \
+             --set "$n" label="$l" icon.drawing=off padding_left=0 padding_right=0 label.padding_left=0 label.padding_right=0 \
+                   background.drawing=off label.color=0xffffffff click_script="$PLUGIN_DIR/popup.sh toggle cpu" "$@"
+}
+cpu_seg cpu "--%" update_freq=8 updates=on script="$PLUGIN_DIR/cpu.sh" popup.align=right $(popup_args "${CYAN}") label.padding_right=12
+sketchybar --subscribe cpu mouse.exited.global system_woke
+cpu_seg cpu_gl "GPU" label.padding_right=5
+cpu_seg cpu_rv "--%" label.padding_right=10
+cpu_seg cpu_rl "RAM" label.padding_right=5
+cpu_seg cpu_cv "--%" label.padding_right=10
+cpu_seg cpu_cl "CPU" label.padding_right=5 icon.drawing=on icon="" icon.padding_left=12 icon.padding_right=6 icon.color=0xffffffff
+sketchybar --add bracket cpu_pill cpu cpu_gl cpu_rv cpu_rl cpu_cv cpu_cl \
+           --set cpu_pill $(pill_args "${CYAN}")
 popup_rows cpu 15
 sketchybar --add item music_gap_r right --set music_gap_r width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
 sketchybar --add item music_pop right \

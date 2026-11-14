@@ -31,6 +31,11 @@ DIM = "0xffa99cc4"
 GREEN = "0xff1db954"
 AMBER = "0xffffd23f"
 RED = "0xffff3d5a"
+# CPU pill status colours (TKOS theme: GREEN/YELLOW/RED in live_vibe.sh) and thresholds (tyler-os #1419): (yellow from, red above)
+OK, WARN, CRIT = "0xff2dffc4", "0xffffd23f", "0xffff3d5a"
+LEVEL_COLORS = (OK, WARN, CRIT)
+THRESHOLDS = {"cpu": (60, 85), "gpu": (60, 85), "ram": (70, 88)}
+HYSTERESIS = 3                                     # points a value must fall below a threshold before the colour steps back down
 FIRE = re.compile(r"fire|kindle|yuri|amazon|echo", re.I)   # devices that are never ours to control
 CPU_ROWS, MUSIC_ROWS, BATT_ROWS = 15, 8, 8
 
@@ -72,6 +77,12 @@ def parse_swap(text: str) -> tuple[float, float]:
 
 def parse_loadavg(text: str) -> list[float]:
     return [float(x) for x in re.findall(r"\d+\.\d+", text)][:3]
+
+
+def parse_iostat_cpu(text: str) -> tuple[float, float, float] | None:
+    """The LAST row of `iostat -n 0 -w 1 -c 2` (us sy id 1m 5m 15m; the second row is the 1 s interval) -> (user, sys, idle) percent."""
+    rows = [l.split() for l in text.splitlines() if re.match(r"\s*\d+\s+\d+\s+\d+\s+[\d.]+", l)]
+    return (float(rows[-1][0]), float(rows[-1][1]), float(rows[-1][2])) if rows else None
 
 
 def parse_top_cpu(text: str) -> tuple[float, float, float] | None:
@@ -272,7 +283,8 @@ def sysctl(key: str) -> str:
 
 
 def read_cpu() -> tuple[float, float, float] | None:
-    return parse_top_cpu(run(["/usr/bin/top", "-l", "2", "-s", "1", "-n", "0"], 6))
+    # iostat, not `top -l 2`: top takes 20-30 s to start on a loaded Mac, so the bar's 10 s alarm killed it and CPU always read --%
+    return parse_iostat_cpu(run(["/usr/sbin/iostat", "-n", "0", "-w", "1", "-c", "2"], 6))
 
 
 def read_gpu() -> dict:
@@ -288,6 +300,79 @@ def read_mem() -> tuple[int, int]:
     return mem_used(vm), total
 
 
+def read_text(path: Path) -> str:
+    try:
+        return path.read_text()
+    except OSError:
+        return ""
+
+
+def read_levels() -> dict | None:
+    try:
+        d = json.loads(read_text(CACHE / "cpu_levels.json"))
+        return {k: int(d[k]) for k in THRESHOLDS}
+    except (ValueError, KeyError, TypeError):
+        return None
+
+
+def write_levels(levels: dict) -> None:
+    try:
+        (CACHE / "cpu_levels.json").write_text(json.dumps(levels))
+    except OSError:
+        pass
+
+
+def level_for(value: float, warn: float, crit: float) -> int:
+    """0 green, 1 yellow (warn up to crit), 2 red (over crit)."""
+    return 2 if value > crit else 1 if value >= warn else 0
+
+
+def next_level(prev: int, value: float, warn: float, crit: float, hyst: float = HYSTERESIS) -> int:
+    """Rising crosses at the threshold at once; falling waits until the value is `hyst` points under it, so a number sitting on a threshold doesn't flicker."""
+    raw = level_for(value, warn, crit)
+    return raw if raw >= prev else min(prev, level_for(value + hyst, warn, crit))
+
+
+def pressure_floor(pressure: int) -> int:
+    """kern.memorystatus_vm_pressure_level: 1 normal, 2 warn, 4 critical."""
+    return 2 if pressure >= 4 else 1 if pressure == 2 else 0
+
+
+def parse_force(text: str) -> dict:
+    """Test hook: 'red' forces all three, or 'cpu=red ram=yellow gpu=green'. Anything else = live values."""
+    names = {"green": 0, "yellow": 1, "red": 2}
+    out: dict = {}
+    for tok in text.replace(",", " ").split():
+        k, _, v = tok.partition("=")
+        if not v and k in names:
+            return {m: names[k] for m in THRESHOLDS}
+        if k in THRESHOLDS and v in names:
+            out[k] = names[v]
+    return out
+
+
+def pill_levels(values: dict, prev: dict, pressure: int, force: dict | None = None) -> dict:
+    """Per-metric level after hysteresis. Missing values (None) keep the previous level; RAM never reads below the pressure floor."""
+    out = {}
+    for k, (warn, crit) in THRESHOLDS.items():
+        v = values.get(k)
+        out[k] = next_level(prev.get(k, 0), v, warn, crit) if v is not None else prev.get(k, 0)
+    out["ram"] = max(out["ram"], pressure_floor(pressure))
+    out.update(force or {})
+    return out
+
+
+def set_pill(texts: dict, levels: dict, prev: dict | None) -> None:
+    """Numbers change text at once; colours (each number, and the pill outline = the worst of three) fade over ~0.4 s."""
+    ids = {"cpu": "cpu_cv", "ram": "cpu_rv", "gpu": "cpu"}
+    sb(*[a for k, i in ids.items() for a in ("--set", i, f"label={texts[k]}")])
+    if prev == levels:
+        return
+    worst = max(levels.values())
+    colors = [a for k, i in ids.items() for a in ("--set", i, f"label.color={LEVEL_COLORS[levels[k]]}")]
+    sb(*(["--animate", "sin", "24"] if prev else []), *colors, "--set", "cpu_pill", f"background.border_color={LEVEL_COLORS[worst]}")
+
+
 def cpu_tick() -> int:
     CACHE.mkdir(parents=True, exist_ok=True)
     lock = open(CACHE / "cpu_tick.lock", "w")
@@ -298,10 +383,18 @@ def cpu_tick() -> int:
     cpu = read_cpu()
     used, total = read_mem()
     ram = used * 100 / total if total else 0
-    pct = f"{cpu[0] + cpu[1]:.0f}%" if cpu else "--%"
     gpu = read_gpu()
-    gp = f"{gpu['pct']}%" if gpu.get("pct") is not None else "--%"
-    sb("--set", "cpu", f"label=CPU {pct} RAM {ram:.0f}% GPU {gp}")
+    cpu_pct = cpu[0] + cpu[1] if cpu else None
+    try:
+        pressure = int(sysctl("kern.memorystatus_vm_pressure_level"))
+    except ValueError:
+        pressure = 1
+    force = parse_force(os.environ.get("TKOS_CPU_PILL_FORCE") or read_text(CACHE / "cpu_force"))
+    prev = read_levels()
+    levels = pill_levels({"cpu": cpu_pct, "ram": ram if total else None, "gpu": gpu.get("pct")}, prev or {}, pressure, force)
+    texts = {"cpu": f"{cpu_pct:.0f}%" if cpu else "--%", "ram": f"{ram:.0f}%", "gpu": f"{gpu['pct']}%" if gpu.get("pct") is not None else "--%"}
+    set_pill(texts, levels, prev)
+    write_levels(levels)
     if popup_open("cpu"):
         fill_cpu(cpu)
     return 0
