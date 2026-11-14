@@ -56,8 +56,7 @@ def plan(p: dict, condensed: bool = False) -> dict:
     The pill is exactly as long as its text; past the cap the text is cut with an ellipsis. Nothing scrolls or animates.
     """
     state = p.get("state", "error")
-    name, artist = p.get("name", ""), p.get("artist", "")
-    song = f"{artist} - {name}" if artist and name else (name or artist)
+    song = p.get("name", "")    # the track title only, never the artist (tyler-os #1436); the music popup still shows the artist
     live = state in PLAYING_STATES and bool(song)
     if state == "nologin" or state == "relogin":
         text, alpha = ("Spotify - connect" if not song else song), 0x80
