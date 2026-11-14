@@ -33,7 +33,6 @@ DROP = [
     ("session files", ["smd.gap", "smd.chip.0", "smd.chip.1", "smd.chip.2", "smd.chip.3", "smd.chip.4", "smd"]),
     ("touch grass", ["touch_grass"]),
     ("load dot", ["load"]),
-    ("music icon", ["music_gap_r", "music_pop"]),
 ]
 CENTER_OR_BRACKET = ("vibe_", "cpu_pill", "smd_pill", "cu_box")
 

@@ -32,16 +32,17 @@ class WidthTest(unittest.TestCase):
         self.assertFalse(pl["scrolls"])
         self.assertGreater(pl["max_chars"], 32)
 
-    def test_only_past_the_max_does_it_scroll(self):
+    def test_past_the_max_it_is_cut_with_an_ellipsis_never_scrolled(self):
         pl = pc.plan({"state": "playing", "name": "x" * 200, "artist": "A", "saved": "?"})
-        self.assertTrue(pl["scrolls"])
+        self.assertFalse(pl["scrolls"])
         self.assertEqual(pl["max_chars"], pc.MAX_CHARS)
+        self.assertTrue(pl["text"].endswith("…"))
 
     def test_condensed_caps_the_room_and_hides_controls_but_keeps_the_design(self):
         full = pc.plan({"state": "playing", "name": "x" * 60, "artist": "A", "saved": "1"})
         small = pc.plan({"state": "playing", "name": "x" * 60, "artist": "A", "saved": "1"}, condensed=True)
         self.assertEqual(small["max_chars"], pc.CONDENSED_CHARS)
-        self.assertTrue(small["scrolls"])
+        self.assertFalse(small["scrolls"])
         self.assertFalse(small["show_play"] or small["show_next"])
         self.assertTrue(small["show_star"])
         for k in ("label_color", "icon_color", "star_icon"):
@@ -88,17 +89,12 @@ class StateTest(unittest.TestCase):
 class ViewTest(unittest.TestCase):
     PL = pc.plan({"state": "playing", "name": "Song", "artist": "Art", "saved": "0"})
 
-    def test_first_draw_and_same_width_do_not_animate(self):
-        for prev in (None, self.PL["width"]):
+    def test_never_animates_or_scrolls(self):
+        for prev in (None, self.PL["width"], self.PL["width"] + 40):
             (args,) = sv.commands(self.PL, prev)
             self.assertNotIn("--animate", args)
-
-    def test_a_new_width_animates_with_tanh(self):
-        (args,) = sv.commands(self.PL, self.PL["width"] + 40)
-        i = args.index("--animate")
-        self.assertEqual(args[i + 1:i + 3], ["tanh", str(sv.FRAMES)])
-        self.assertTrue(15 <= sv.FRAMES <= 20)
-        self.assertIn(f"label.width={self.PL['width']}", args[i:])
+            self.assertIn("scroll_texts=off", args)
+            self.assertIn(f"label.width={self.PL['width']}", args)
 
     def test_the_pill_is_always_drawn(self):
         for st in ("playing", "paused", "idle", "nologin", "error"):

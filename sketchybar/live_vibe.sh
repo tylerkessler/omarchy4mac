@@ -21,20 +21,35 @@ export COMMENT="0xff6b5f86"
 export DIM="0xff9a90b4"
 export SOFT="0xffa99cc4"
 export ACCENT="0xffff8b4b"   # sunset orange (was cyan)
-export CYAN="0xff00e5ff"
-export PINK="0xffff6392"
-export HOTPINK="0xffff47c2"
-export GREEN="0xff2dffc4"
-export MINT="0xff2dffc4"
-export YELLOW="0xffffd23f"
-export GOLD="0xffffd23f"
-export BLUE="0xff33b5ff"
-export MAGENTA="0xffb388ff"
-export LAVENDER="0xffb388ff"
-export ORANGE="0xffff9e3d"
-export RED="0xffff3d5a"
+# Legacy names below are kept so old plugins still work, but every one is a sunset tone now (tyler-os #1425):
+# no cyan, no mint, no brand green or red anywhere on the bar.
+export CYAN="0xff9d7bff"
+export PINK="0xffff6fa3"
+export HOTPINK="0xffff6fa3"
+export GREEN="0xffc8b6ff"
+export MINT="0xffc8b6ff"
+export YELLOW="0xffffb52e"
+export GOLD="0xffffca00"
+export BLUE="0xff9d7bff"
+export MAGENTA="0xffe066ff"
+export LAVENDER="0xffc8b6ff"
+export ORANGE="0xffff9a5c"
+export RED="0xffff5a6e"
 export GLOW="0x80ff8b4b"
 export GLOW_PINK="0x80ff6392"
+# One sunset gradient across the bar, left to right (tyler-os #1425): each pill takes the stop at its place, so neighbours blend.
+# Static, never animated. lib/palette.py reads these same lines for the Python-drawn pills.
+export SUN_LOGO="0xffffb52e"   # the Omarchy logo: a still yellow-orange sun, the left anchor
+export GRAD_1="0xffff9a5c"     # peach: TK, keyboard
+export GRAD_2="0xffff8b4b"     # orange: desktop + app
+export GRAD_3="0xffff6fa3"     # pink: Spotify
+export GRAD_4="0xffe066ff"     # magenta: YouTube, touch grass, clock
+export GRAD_5="0xff9d7bff"     # violet: computer use, CPU + load
+export GRAD_6="0xffffca00"     # gold: agents + battery island, the right anchor
+# Status, in sunset: calm lavender (was green), amber (was yellow), deep coral (was red).
+export STATUS_OK="0xffc8b6ff"
+export STATUS_WARN="0xffffb52e"
+export STATUS_BAD="0xffff5a6e"
 # The four sunset stops, one per island left to right, and the ticker's dusk-plum pill fill.
 export SUN_1="0xffff8b4b"
 export SUN_2="0xffff6392"
@@ -45,9 +60,9 @@ export HAIR_1="0x8cff8b4b"
 export HAIR_2="0x8cff6392"
 export HAIR_3="0x8cd148f0"
 export HAIR_4="0x8c8b5cf6"
-# Spotify's own green for the Spotify logo (Tyler, 2026-10-28) — never the theme mint.
-export SPOTIFY_GREEN="0xff1db954"
-export SPOTIFY_GREEN_DIM="0x8c1db954"
+# No brand colours on the bar (tyler-os #1425): the old Spotify green name now points at its sunset slot.
+export SPOTIFY_GREEN="0xffff8b4b"
+export SPOTIFY_GREEN_DIM="0x8cff8b4b"
 # Desktops 1-5: one sunset step each, orange -> violet (rail.sunset_at((n-1)/4), computed).
 # Full strength = the active desktop's pill; _DIM (35% alpha) = the inactive number.
 export SPACE_1="0xffff8b4b"

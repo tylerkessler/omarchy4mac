@@ -6,17 +6,27 @@ from __future__ import annotations
 
 # Hack Nerd Font Bold 13 is monospace: 0.602 em per glyph.
 CHAR_W = 7.83
-MAX_CHARS = 80          # was 32; Tyler asked for 2-3x (tyler-os #1381). Longer than this scrolls.
+MAX_CHARS = 80          # was 32; Tyler asked for 2-3x (tyler-os #1381). Longer than this is cut with an ellipsis.
 CONDENSED_CHARS = 16    # while the computer-use banner (or another urgent item) needs the room
-FG = "0xfff4eefe"
-YELLOW = "0xffffd23f"
-SPOTIFY_GREEN = "0xff1db954"
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from palette import C  # noqa: E402  the one sunset palette (live_vibe.sh, tyler-os #1425)
+
+FG = C["FG"]
+YELLOW = C["GRAD_6"]       # the saved-song star: sunset gold
 PLAYING_STATES = ("playing", "paused")
 
 
 def label_width(chars: int) -> int:
     """Pixels the label needs for this many characters."""
     return round(max(chars, 0) * CHAR_W)
+
+
+def clip(text: str, cap: int) -> str:
+    """The text, or its first cap-1 characters and an ellipsis: one static line, no scrolling."""
+    return text if len(text) <= cap else text[:max(cap - 1, 0)].rstrip() + "…"
 
 
 def with_alpha(color: str, alpha: int) -> str:
@@ -43,7 +53,7 @@ def plan(p: dict, condensed: bool = False) -> dict:
     """What the Spotify pill shows for one player state.
 
     The pill never hides.  Nothing playing keeps the last song dimmed, or says Spotify (and what is missing) when there is none.
-    If the text fits, the pill is exactly as long as it needs (no scrolling); past the cap the label scrolls inside the cap.
+    The pill is exactly as long as its text; past the cap the text is cut with an ellipsis. Nothing scrolls or animates.
     """
     state = p.get("state", "error")
     name, artist = p.get("name", ""), p.get("artist", "")
@@ -56,13 +66,14 @@ def plan(p: dict, condensed: bool = False) -> dict:
     else:
         text, alpha = "Spotify", 0x73
     cap = CONDENSED_CHARS if condensed else MAX_CHARS
-    shown = min(len(text), cap)
+    text = clip(text, cap)   # static: a long title is cut with an ellipsis, never scrolled (Tyler, 2026-11-14, tyler-os #1425)
+    shown = len(text)
     saved = p.get("saved", "?")
     return {
         "text": text,
         "max_chars": shown,
         "width": label_width(shown),
-        "scrolls": len(text) > cap,
+        "scrolls": False,
         "label_color": with_alpha(FG, alpha),
         "icon_color": with_alpha(FG, alpha),
         "play_icon": "" if state == "playing" else "",     # pause while playing, play otherwise

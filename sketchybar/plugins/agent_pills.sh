@@ -5,7 +5,7 @@
 #   agent_pills.sh toggle   (agents click_script) opens/closes the budget popup (5-hour and weekly %).
 source "$CONFIG_DIR/colors.sh"
 [ -f "$CONFIG_DIR/live_vibe.sh" ] && source "$CONFIG_DIR/live_vibe.sh"
-MINT="${MINT:-$GREEN}"; GOLD="${GOLD:-$YELLOW}"
+MINT="${STATUS_OK:-${MINT:-$GREEN}}"; GOLD="${STATUS_WARN:-${GOLD:-$YELLOW}}"; RED="${STATUS_BAD:-$RED}"   # sunset status tones (#1425)
 SB=/opt/homebrew/bin/sketchybar
 CACHE="$HOME/.cache/omarchy4mac"; mkdir -p "$CACHE"
 FLASH="$CACHE/claude_done"   # "<until epoch> <status> <label>"
@@ -146,12 +146,14 @@ case "$NAME:$SENDER" in
   agents:*) flash_active && exit 0; agents; exit 0 ;;
   load:*)
     L="$(/usr/sbin/sysctl -n vm.loadavg | awk '{printf "%d", $2 + 0.5}')"
-    $SB --set load icon.color="$(tier "$L" 40 60)"
+    $SB --set load label="$L" label.color="$(tier "$L" 40 60)"
     exit 0 ;;
   cu_lock:*)
     if [ -d "$STATE_DIR/held" ] || [ "$(cat "$STATE_DIR/COMPUTER_USE_LOCKED" 2>/dev/null)" = 1 ]; then
       H="$(head -1 "$STATE_DIR/held/holder" 2>/dev/null)"; [ -z "$H" ] && H="user block"
-      $SB --set cu_lock drawing=on label="Mac · $H"
+      T="$(stat -f %m "$STATE_DIR/held" 2>/dev/null || stat -f %m "$STATE_DIR/COMPUTER_USE_LOCKED" 2>/dev/null)"
+      S=$(( $(date +%s) - ${T:-$(date +%s)} )); [ "$S" -lt 60 ] && D="${S}s" || D="$((S / 60))m"
+      $SB --set cu_lock drawing=on label="Mac · $H · $D"
     else
       $SB --set cu_lock drawing=off
     fi

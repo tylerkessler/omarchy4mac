@@ -27,12 +27,15 @@ CACHE = Path(os.environ.get("TKOS_BAR_CACHE", HOME / ".cache" / "omarchy4mac"))
 LIB = Path(os.environ.get("TKOS_SPOTIFY_DIR", HOME / "Scripts/tyler-os-live/coach"))
 OPEN_FILE = CACHE / "popup_open"
 WHITE = "0xffffffff"
-DIM = "0xffa99cc4"
-GREEN = "0xff1db954"
-AMBER = "0xffffd23f"
-RED = "0xffff3d5a"
-# CPU pill status colours (TKOS theme: GREEN/YELLOW/RED in live_vibe.sh) and thresholds (tyler-os #1419): (yellow from, red above)
-OK, WARN, CRIT = "0xff2dffc4", "0xffffd23f", "0xffff3d5a"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from palette import C  # noqa: E402  the one sunset palette (live_vibe.sh, tyler-os #1425)
+
+DIM = C["SOFT"]
+GREEN = C["STATUS_OK"]     # names kept from #1419; every one is a sunset tone now (no brand green)
+AMBER = C["STATUS_WARN"]
+RED = C["STATUS_BAD"]
+# CPU pill status colours (sunset: calm lavender / amber / deep coral) and thresholds (tyler-os #1419): (warn from, bad above)
+OK, WARN, CRIT = C["STATUS_OK"], C["STATUS_WARN"], C["STATUS_BAD"]
 LEVEL_COLORS = (OK, WARN, CRIT)
 THRESHOLDS = {"cpu": (60, 85), "gpu": (60, 85), "ram": (70, 88)}
 HYSTERESIS = 3                                     # points a value must fall below a threshold before the colour steps back down
