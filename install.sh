@@ -107,6 +107,17 @@ elif ! command -v ttfx >/dev/null 2>&1; then
   say "cargo not found; screensaver skipped (install rustup, rerun)"
 fi
 
+# ---- 6b. Ghostty: see-through window --------------------------------------
+# Only keys the config does not set yet, so a hand-tuned file is never overwritten.
+GCFG="$HOME/.config/ghostty/config"
+for kv in "background-opacity = 0.88" "background-blur = 20"; do
+  key="${kv%% =*}"
+  grep -qE "^[[:space:]]*$key[[:space:]]*=" "$GCFG" 2>/dev/null && continue
+  if [ "$DRY" = 1 ]; then echo "    would add to Ghostty config: $kv"; continue; fi
+  mkdir -p "$(dirname "$GCFG")"
+  printf '%s\n' "$kv" >> "$GCFG"
+done
+
 # ---- 7. Themes ------------------------------------------------------------
 say "Syncing Omarchy themes"
 export PATH="$HOME/.local/bin:/opt/homebrew/bin:$PATH"
