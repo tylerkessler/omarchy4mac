@@ -1,11 +1,13 @@
-"""Logic for the YouTube and touch-grass pills (tyler-os #1381). Pure functions plus a tiny CLI; no SketchyBar calls.
+"""Logic for the YouTube, touch-grass and shipped pills (tyler-os #1381, #1396). Pure functions plus a tiny CLI; no SketchyBar calls.
 
-CLI (called by plugins/youtube.sh and plugins/touch_grass.sh):
+CLI (called by plugins/youtube.sh, plugins/touch_grass.sh, plugins/shipped.sh):
   extras.py youtube            stdin = `aerospace list-windows` lines "app|title"; prints the video title or nothing
   extras.py grass IDLE_NS      one tick of the touch-grass timer; prints "show|label" (show is 1 or 0)
   extras.py grass-snooze       snooze the pill for 15 minutes
   extras.py width TEXT [CAP]   prints "pixels chars scrolls(0|1)" for a label
   extras.py condensed          prints 1 while the computer-use banner needs the room
+  extras.py shipped            label for the coconut pill from Live's shipped_today.json (empty if missing/wrong-day)
+  extras.py live-window        stdin = `tmux list-windows -F '#{window_name}'`; prints the LIVE window name or nothing
 """
 from __future__ import annotations
 
@@ -14,6 +16,7 @@ import os
 import re
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 
 CHAR_W = 7.83            # Hack Nerd Font Bold 13 is monospace
@@ -27,6 +30,8 @@ SNOOZE = 15 * 60
 STATE_DIR = Path(os.environ.get("TKOS_STATE_DIR", Path.home() / ".local/state/tyler-os-vault"))
 GRASS_FILE = Path(os.environ.get("TKOS_GRASS_FILE", Path.home() / ".cache/omarchy4mac/touch_grass.json"))
 CU_LINE = Path(os.environ.get("TKOS_CU_LINE", STATE_DIR / "computer_use.line"))
+SHIPPED_CACHE = Path(os.environ.get("TKOS_SHIPPED_CACHE", STATE_DIR / "shipped_today.json"))
+LIVE_NAMES = {"live", "tyler live", "tkos live", "tyler-live"}
 
 
 def label_width(chars: int) -> int:
@@ -94,6 +99,42 @@ def condensed() -> bool:
         return False
 
 
+def today_local() -> str:
+    """Local calendar day (America/New_York on this Mac), same stamp Live writes to shipped_today.json."""
+    return datetime.now().astimezone().strftime("%Y-%m-%d")
+
+
+def shipped_count(data: dict | None, today: str | None = None) -> int | None:
+    """len(prs) when the cache is for `today`. None if missing, unreadable, or dated to another day — never a guessed count."""
+    if not isinstance(data, dict):
+        return None
+    if data.get("date") != (today or today_local()):
+        return None
+    prs = data.get("prs")
+    if not isinstance(prs, list):
+        return None
+    return len(prs)
+
+
+def shipped_label(count: int | None, condensed: bool = False) -> str:
+    """Pill label (icon is 🥥 in sketchybarrc). Empty string hides the pill."""
+    if count is None:
+        return ""
+    return str(count) if condensed else f"{count} shipped"
+
+
+def live_window(names: list[str]) -> str | None:
+    """The TKOS Live window from `tmux list-windows` names. Exact LIVE first, then tyler live / tkos live."""
+    stripped = [n.strip() for n in names if n.strip()]
+    for n in stripped:
+        if n.upper() == "LIVE":
+            return n
+    for n in stripped:
+        if n.lower() in LIVE_NAMES:
+            return n
+    return None
+
+
 def main(argv: list[str]) -> int:
     cmd = argv[0] if argv else ""
     if cmd == "youtube":
@@ -111,6 +152,11 @@ def main(argv: list[str]) -> int:
         print(px, chars, int(scrolls))
     elif cmd == "condensed":
         print(int(condensed()))
+    elif cmd == "shipped":
+        n = shipped_count(_load(SHIPPED_CACHE))
+        print(shipped_label(n, condensed()))
+    elif cmd == "live-window":
+        print(live_window(sys.stdin.read().splitlines()) or "")
     else:
         return 2
     return 0
