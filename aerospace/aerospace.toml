@@ -42,12 +42,20 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 5 = ['built-in', '\(2\)$', '\(1\)$']      # music   → laptop, else right, else left
 
 [gaps]
+# Window edge margin = how far the SketchyBar pills sit from the screen edge.
+# Measured on a 2x screenshot: the right pill's outer edge is 13.5 pt from the
+# screen edge. Windows draw their border about 2.5 pt outside the tiled frame,
+# so the frame inset is 13.5 + 2.5 = 16 and the visible window edge lines up
+# with the pill edge. (Bar margin 10 + padding 8 + item 4 = 22 on paper, but the
+# pill is drawn inside that; the screenshot wins.)
 inner.horizontal = 8
 inner.vertical = 8
-outer.left = 8
-outer.bottom = 102  # Bottom ticker is 84 tall at screen y=0 (coach/ticker_overlay.swift HEIGHT); 84 + 18 visible gap. Top gap is 8 (bar 6+36, window at 50), this is bigger on purpose
-outer.top = 50   # SketchyBar y_offset 6 + height 36 + 8 visual gap
-outer.right = 8
+outer.left = 16
+# Bottom ticker is 84 tall at screen y=0 (coach/ticker_overlay.swift HEIGHT): 84 + 16
+outer.bottom = 100
+# SketchyBar y_offset 6 + height 36 = 42, + 16
+outer.top = 58
+outer.right = 16
 
 [mode.main.binding]
 
