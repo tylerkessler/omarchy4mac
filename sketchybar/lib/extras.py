@@ -17,6 +17,7 @@ import time
 from pathlib import Path
 
 CHAR_W = 7.83            # Hack Nerd Font Bold 13 is monospace
+LABEL_PAD = 10           # SketchyBar counts the label's own padding (left 4 + right 6) inside label.width (tyler-os #1442)
 MAX_CHARS = 80
 CONDENSED_CHARS = 16
 GRASS_AFTER = 2 * 3600   # active this long without a break
@@ -30,7 +31,8 @@ CU_LINE = Path(os.environ.get("TKOS_CU_LINE", STATE_DIR / "computer_use.line"))
 
 
 def label_width(chars: int) -> int:
-    return round(max(chars, 0) * CHAR_W)
+    """label.width for this many characters: the text plus the label padding, so the last letter clears the outline."""
+    return round(chars * CHAR_W) + LABEL_PAD if chars > 0 else 0
 
 
 def fit(text: str, condensed: bool = False) -> tuple[int, int, bool]:
