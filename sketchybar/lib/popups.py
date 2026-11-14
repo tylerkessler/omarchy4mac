@@ -351,6 +351,15 @@ def parse_force(text: str) -> dict:
     return out
 
 
+def system_watts(b: dict) -> int | None:
+    """Whole watts the Mac draws: SystemLoad when ioreg has it, else |battery volts x amps|."""
+    if b.get("system_load"):
+        return round(b["system_load"] / 1000)
+    if b.get("voltage") and b.get("amperage"):
+        return round(abs(b["amperage"]) * b["voltage"] / 1e6)
+    return None
+
+
 def pill_levels(values: dict, prev: dict, pressure: int, force: dict | None = None) -> dict:
     """Per-metric level after hysteresis. Missing values (None) keep the previous level; RAM never reads below the pressure floor."""
     out = {}
@@ -365,11 +374,11 @@ def pill_levels(values: dict, prev: dict, pressure: int, force: dict | None = No
 def set_pill(texts: dict, levels: dict, prev: dict | None) -> None:
     """Numbers change text at once; colours (each number, and the pill outline = the worst of three) fade over ~0.4 s."""
     ids = {"cpu": "cpu_cv", "ram": "cpu_rv", "gpu": "cpu"}
-    sb(*[a for k, i in ids.items() for a in ("--set", i, f"label={texts[k]}")])
+    sb(*[a for k, i in ids.items() for a in ("--set", i, f"label={texts[k]}")], "--set", "cpu_w", f"label={texts.get('w', '--W')}")
     if prev == levels:
         return
     worst = max(levels.values())
-    colors = [a for k, i in ids.items() for a in ("--set", i, f"label.color={LEVEL_COLORS[levels[k]]}")]
+    colors = [a for k, i in ids.items() for a in ("--set", i, f"label.color={LEVEL_COLORS[levels[k]]}")] + ["--set", "cpu_w", f"label.color={LEVEL_COLORS[levels['gpu']]}"]
     sb(*(["--animate", "sin", "24"] if prev else []), *colors, "--set", "cpu_pill", f"background.border_color={LEVEL_COLORS[worst]}")
 
 
@@ -393,6 +402,8 @@ def cpu_tick() -> int:
     prev = read_levels()
     levels = pill_levels({"cpu": cpu_pct, "ram": ram if total else None, "gpu": gpu.get("pct")}, prev or {}, pressure, force)
     texts = {"cpu": f"{cpu_pct:.0f}%" if cpu else "--%", "ram": f"{ram:.0f}%", "gpu": f"{gpu['pct']}%" if gpu.get("pct") is not None else "--%"}
+    w = system_watts(parse_ioreg(run(["/usr/sbin/ioreg", "-rn", "AppleSmartBattery"], 3)))
+    texts["w"] = f"{w}W" if w is not None else "--W"
     set_pill(texts, levels, prev)
     write_levels(levels)
     if popup_open("cpu"):
