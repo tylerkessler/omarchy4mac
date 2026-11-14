@@ -413,6 +413,9 @@ popup_rows music_pop 8
 popup_rows battery 8
 sketchybar --set battery.r8 click_script="$PLUGIN_DIR/battery_click.sh"
 
+# ---------- Agent status pills: queue, Claude budget, load dot, computer-use light (tyler-os #1424) ----------
+source "$CONFIG_DIR/items/agent_status.sh"
+
 # ---------- Instruction files shaping the focused LLM session (tyler-os coach/session_md.py, issue #1285) ----------
 # Added after every other right-hand item, so they land in the empty stretch left of the agents pill. Hidden until an LLM tab is focused.
 python3 "${TKOS_SESSION_MD:-$HOME/Scripts/tyler-os-live/coach/session_md.py}" setup

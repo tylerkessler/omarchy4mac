@@ -1,0 +1,1 @@
+/Users/tylerkessler/Scripts/tyler-os-live/dotfiles/sketchybar/session_md.sh

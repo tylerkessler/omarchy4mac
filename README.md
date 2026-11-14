@@ -288,6 +288,19 @@ opacity, gap toggle). Those have no macOS equivalent and are not coming.
 The item-by-item checklist is in [`docs/parity-v4.md`](docs/parity-v4.md);
 what changed and when is in [`CHANGELOG.md`](CHANGELOG.md).
 
+### Agent status pills (tyler-os #1424)
+
+Top-right group, driven by SketchyBar custom events with a slow fallback timer (60 s; cu_lock 30 s). Everything is static: a status only changes a border colour, nothing flashes or pulses.
+
+| Pill | Shows | Event |
+|---|---|---|
+| queue | `N running · M queued` (working Claude tabs in tmux `TKOS`, live `~/.donna/watchers` scripts); border turns green (merged) or red (failed, stalled) for 8 s on `claude_done` | `donna_queue`, `claude_done` |
+| budget | Claude 5-hour usage %, amber at 30, red at 40; click = weekly % (stop 50). Reads the Claude Code statusline capture; `5h –` when none is under 6 h old | `claude_done` |
+| load dot | green under 40, amber 40-60, red over 60 (1-minute load average) | none, 60 s |
+| cu_lock | lit while `~/Scripts/computer-use-lock` is held | `computer_use_lock` |
+
+Job end, one line: `sketchybar/bin/claude-done merged|failed|stalled "label"`. Queue changed: `sketchybar/bin/donna-queue`.
+
 | Omarchy Quattro has | omarchy4mac uses | Match | Why not, and the plan |
 |---|---|---|---|
 | Tiling WM: focus, move, swap, resize, fullscreen, 5 workspaces, monitors | AeroSpace | ✅ |  |
