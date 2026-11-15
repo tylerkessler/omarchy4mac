@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Agent status (tyler-os #1424, #1440): the agents pill, the load dot and cu_lock. Driven by events; update_freq is only a slow fallback.
-# The agents pill is one line: today's spend · running/queued jobs · Claude 5-hour budget ("$18 · 2 running · 5h 73%").
+# The agents pill is one line: running/queued jobs ("3 running · 8 queued"). Spend and the 5-hour % live in the Weekly Use block (tyler-os #1468).
 # NAME picks the item. SENDER is the event: claude_done (STATUS, LABEL), donna_queue, computer_use_lock, system_woke, routine.
 #   agent_pills.sh toggle   (agents click_script) opens/closes the budget popup (5-hour and weekly %).
 source "$CONFIG_DIR/colors.sh"
@@ -87,28 +87,14 @@ queue() {
   [ "$queued" -gt 0 ] && printf '%s queued' "$queued"
 }
 
-# ---- the agents pill: spend (plugins/agents.sh, ccusage cached 10 min) · queue · budget, white text; the icon wears the spend tier,
-# or the budget's amber/red once it reaches 30%. Hidden only when all three are empty. ----
+# ---- the agents pill: queue only ("3 running · 8 queued", or "idle"). Spend and the 5-hour % are not here: the Weekly Use block in the
+# bottom scroller already shows them (tyler-os #1468). Click still opens the 5-hour + weekly popup. ----
 agents() {
   "$CONFIG_DIR/plugins/agent_status.sh"   # logo motion + TK colour ride this item's update
-  local cost q tier parts=()
-  cost="$(bash "$CONFIG_DIR/plugins/agents.sh")"
+  local q
   q="$(queue)"
-  budget
-  if [ -n "$cost" ] && [ "$cost" -gt 0 ] 2>/dev/null; then
-    # Spend tier along the sunset (tyler-os #1161): under $5 orange, $20 pink, $50 magenta, more violet.
-    if   [ "$cost" -lt 5 ];  then tier="${SUN_1:-$ACCENT}"
-    elif [ "$cost" -lt 20 ]; then tier="${SUN_2:-$ACCENT}"
-    elif [ "$cost" -lt 50 ]; then tier="${SUN_3:-$ACCENT}"
-    else tier="${SUN_4:-$ACCENT}"; fi
-    parts+=("\$$cost")
-  fi
-  [ -n "$q" ] && parts+=("$q")
-  [ -n "$BUDGET_TEXT" ] && parts+=("$BUDGET_TEXT")
-  if [ ${#parts[@]} -eq 0 ]; then $SB --set agents drawing=off; return; fi
-  local label="${parts[0]}" p
-  for p in "${parts[@]:1}"; do label="$label · $p"; done
-  $SB --set agents drawing=on icon="󰚩" icon.color="${BUDGET_C:-${tier:-$FG}}" label="$label" label.color="$FG"
+  budget   # only refreshes the popup rows while the popup is open
+  $SB --set agents drawing=on icon="󰚩" icon.color="${SUN_2:-$FG}" label="${q:-idle}" label.color="$FG"
 }
 
 flash_active() {

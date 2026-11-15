@@ -294,8 +294,8 @@ Top-right group, driven by SketchyBar custom events with a slow fallback timer (
 
 | Pill | Shows | Event |
 |---|---|---|
-| queue | `N running · M queued` (working Claude tabs in tmux `TKOS`, live `~/.donna/watchers` scripts); border turns green (merged) or red (failed, stalled) for 8 s on `claude_done` | `donna_queue`, `claude_done` |
-| budget | Claude 5-hour usage %, amber at 30, red at 40; click = weekly % (stop 50). Reads the Claude Code statusline capture; `5h –` when none is under 6 h old | `claude_done` |
+| queue (in the agents pill) | `N running · M queued` (working Claude tabs in tmux `TKOS`, live `~/.donna/watchers` scripts); border turns green (merged) or red (failed, stalled) for 8 s on `claude_done` | `donna_queue`, `claude_done` |
+| agents pill | queue only (`3 running · 8 queued`, or `idle`); no $ or 5-hour % (the Weekly Use block in the bottom scroller has them, tyler-os #1468); click = 5-hour and weekly popup | `claude_done` |
 | load dot | green under 40, amber 40-60, red over 60 (1-minute load average) | none, 60 s |
 | cu_lock | lit while `~/Scripts/computer-use-lock` is held | `computer_use_lock` |
 
