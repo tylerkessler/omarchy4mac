@@ -148,3 +148,33 @@ class PillStatusTest(unittest.TestCase):
         self.assertEqual(p.system_watts({"system_load": 18446744073709548000, "voltage": 12845, "amperage": -279}), 4)
         self.assertEqual(p.system_watts({"system_load": 9611}), 10)
         self.assertIsNone(p.system_watts({}))
+
+
+class RedAlertTest(unittest.TestCase):
+    """The CPU pill pulses only while it is red and its levels are fresh (tyler-os #1448)."""
+
+    def setUp(self):
+        import tempfile
+        self.dir = tempfile.TemporaryDirectory()
+        self.old = p.CACHE
+        p.CACHE = Path(self.dir.name)
+
+    def tearDown(self):
+        p.CACHE = self.old
+        self.dir.cleanup()
+
+    def test_alpha(self):
+        self.assertEqual(p.alpha("0xffff5a6e", 0x59), "0x59ff5a6e")
+
+    def test_red_only_when_red_and_fresh(self):
+        import json, os, time
+        f = p.CACHE / "cpu_levels.json"
+        self.assertFalse(p.red_now())
+        f.write_text(json.dumps({"cpu": 2, "ram": 0, "gpu": 0}))
+        self.assertTrue(p.red_now())
+        f.write_text(json.dumps({"cpu": 1, "ram": 1, "gpu": 0}))
+        self.assertFalse(p.red_now())
+        f.write_text(json.dumps({"cpu": 2, "ram": 0, "gpu": 0}))
+        old = time.time() - p.ALERT_STALE - 5
+        os.utime(f, (old, old))
+        self.assertFalse(p.red_now())
