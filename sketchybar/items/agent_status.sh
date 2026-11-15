@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Agent status, top-right group (tyler-os #1424, #1440). Sourced from sketchybarrc, after the right-group popups.
 # Right items lay out right-to-left in add order, so reading the bar left to right: cu_lock, load (the CPU pill's first segment), CPU...
-#   agents   "$18 · 2 running · 5h 73%": spend, queue, Claude 5-hour budget (icon amber at 30, red at 40); click = 5-hour + weekly %.
+#   agents   "3 running · 8 queued" (or "idle"); click = 5-hour + weekly % popup.
 #            Flashes green/red for 8 s on claude_done (bin/claude-done), recounts on donna_queue (bin/donna-queue)
 #   load     "LOAD 33" inside the CPU pill (no lone dot, tyler-os #1425): the number is calm under 40, amber 40-60, coral over 60
 #   cu_lock  the bar's one computer-use pill, "Mac · Donna · 3m", lit only while ~/Scripts/computer-use-lock is held;
@@ -23,7 +23,7 @@ sketchybar --add item load right \
                  script="$PLUGIN_DIR/agent_pills.sh" \
            --subscribe load system_woke
 
-# Queue and budget live in the agents pill's text now (one pill instead of three, tyler-os #1440); its popup is the budget detail.
+# The queue is the agents pill's text (tyler-os #1440, #1468); its popup is the budget detail.
 sketchybar --set agents \
                  script="$PLUGIN_DIR/agent_pills.sh" \
                  click_script="$PLUGIN_DIR/agent_pills.sh toggle" \
