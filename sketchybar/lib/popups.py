@@ -3,6 +3,7 @@
 
 Pure parsers and row builders first (tests/test_popups.py checks them), then the sketchybar glue.
   popups.py cpu-tick        the CPU/RAM pill: one read, redraws the popup too only while it is open
+  popups.py red-alert       pulse the CPU pill red while it is red (started by cpu-tick; one loop at a time)
   popups.py fill NAME       draw one popup's rows now (cpu | music | battery)
   popups.py ctl ACTION      music controls: playpause | next | prev | star
 No API call happens unless the music popup is open or a control was clicked. Controls never wake or take over a device:
@@ -388,6 +389,58 @@ def set_pill(texts: dict, levels: dict, prev: dict | None) -> None:
     sb(*(["--animate", "sin", "24"] if prev else []), *colors, "--set", "cpu_pill", f"background.border_color={LEVEL_COLORS[worst]}")
 
 
+# Red alert (tyler-os #1448): while the pill is red its outline and fill fade in and out, ~1.5 s each way, then it goes back to the
+# static look. The only animation on the bar, by Tyler's exception to the static-only rule. One loop, held by a lock; cpu-tick starts it.
+ALERT_LOCK = CACHE / "cpu_alert.lock"
+ALERT_HALF = 1.5                                   # seconds per fade
+ALERT_FRAMES = 90                                  # sketchybar animates at 60 frames a second
+ALERT_STALE = 60                                   # levels older than this (cpu-tick stopped) end the alert
+
+
+def alpha(color: str, a: int) -> str:
+    """0xAARRGGBB with a new alpha byte."""
+    return f"0x{a:02x}{color[-6:]}"
+
+
+def red_now() -> bool:
+    try:
+        fresh = time.time() - (CACHE / "cpu_levels.json").stat().st_mtime < ALERT_STALE
+    except OSError:
+        return False
+    levels = read_levels()
+    return fresh and bool(levels) and max(levels.values()) == 2
+
+
+def red_alert() -> int:
+    CACHE.mkdir(parents=True, exist_ok=True)
+    lock = open(ALERT_LOCK, "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return 0                                   # a loop is already pulsing: never stack
+    bright = ("background.border_color=" + CRIT, "background.color=" + alpha(CRIT, 0x59))
+    dim = ("background.border_color=" + alpha(CRIT, 0x55), "background.color=" + C["PLUM"])
+    up = True
+    while red_now():
+        sb("--animate", "sin", str(ALERT_FRAMES), "--set", "cpu_pill", *(bright if up else dim))
+        up = not up
+        time.sleep(ALERT_HALF)
+    levels = read_levels() or {}
+    sb("--set", "cpu_pill", f"background.border_color={LEVEL_COLORS[max(levels.values(), default=0)]}", "background.color=" + C["PLUM"])
+    return 0
+
+
+def start_red_alert() -> None:
+    """Spawn the pulse loop unless one already holds the lock (checked here so a red tick does not start a python every 8 s)."""
+    try:
+        with open(ALERT_LOCK, "w") as f:
+            fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        return
+    subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "red-alert"], stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+
+
 def cpu_tick() -> int:
     CACHE.mkdir(parents=True, exist_ok=True)
     lock = open(CACHE / "cpu_tick.lock", "w")
@@ -412,6 +465,8 @@ def cpu_tick() -> int:
     texts["w"] = f"{w}W" if w is not None else "--W"
     set_pill(texts, levels, prev)
     write_levels(levels)
+    if max(levels.values()) == 2:
+        start_red_alert()
     if popup_open("cpu"):
         fill_cpu(cpu)
     return 0
@@ -554,6 +609,8 @@ def main(argv: list[str]) -> int:
     cmd = argv[0] if argv else ""
     if cmd == "cpu-tick":
         return cpu_tick()
+    if cmd == "red-alert":
+        return red_alert()
     if cmd == "fill" and len(argv) > 1:
         {"cpu": fill_cpu, "battery": fill_battery, "music": lambda: fill_music(True)}.get(argv[1], lambda: None)()
         return 0
