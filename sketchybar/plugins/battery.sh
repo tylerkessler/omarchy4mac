@@ -29,8 +29,22 @@ if is_yes IsCharging; then STATE=charging; elif is_yes ExternalConnected; then S
 # Level glyphs 0..10 (Hack Nerd Font), charging set has the bolt
 PLAIN=(󰂎 󰁺 󰁻 󰁼 󰁽 󰁾 󰁿 󰂀 󰂁 󰂂 󰁹)
 BOLT=(󰢟 󰢜 󰂆 󰂇 󰂈 󰢝 󰂉 󰢞 󰂊 󰂋 󰂅)
-if [ "$PCT" -ge 60 ]; then LEVEL_COLOR="$MINT"; elif [ "$PCT" -ge 30 ]; then LEVEL_COLOR="$GOLD"
-elif [ "$PCT" -ge 15 ]; then LEVEL_COLOR="$SUN_1"; else LEVEL_COLOR="$RED"; fi
+# Sunset bands (tyler-os #1527): charging or >=50 lavender, 30-49 orange, 20-29 amber, <20 coral.
+# Below lavender the island pulses: colour alternates with its dim twin each tick, faster as it worsens.
+LAV="0xffc8b6ff"; ORG="0xffff8b4b"; AMB="0xffffb52e"; COR="0xffff5a6e"
+ORG_D="0x99ff8b4b"; AMB_D="0x99ffb52e"; COR_D="0x99ff5a6e"
+PHASE=$(( $(date +%s) % 2 )); PULSE_FREQ=""
+if [ "$STATE" = charging ] || [ "$PCT" -ge 50 ]; then
+  LEVEL_COLOR="$LAV"
+elif [ "$PCT" -ge 30 ]; then
+  LEVEL_COLOR="$ORG"; [ "$PHASE" -eq 1 ] && LEVEL_COLOR="$ORG_D"
+elif [ "$PCT" -ge 20 ]; then
+  LEVEL_COLOR="$AMB"; [ "$PHASE" -eq 1 ] && LEVEL_COLOR="$AMB_D"; PULSE_FREQ=1
+elif [ "$PCT" -ge 10 ]; then
+  LEVEL_COLOR="$COR"; [ "$PHASE" -eq 1 ] && LEVEL_COLOR="$COR_D"; PULSE_FREQ=1
+else
+  LEVEL_COLOR="$COR"; [ "$PHASE" -eq 1 ] && LEVEL_COLOR="0xffffffff"; PULSE_FREQ=1
+fi
 
 TICK=$(( $(date +%s) / 2 % 3 ))
 case "$STATE" in
@@ -39,10 +53,11 @@ case "$STATE" in
   *)        FRAMES=("···" "···" "···"); WATTS="$W_IN"; FLOW_COLOR="$DIM"; ICON="${BOLT[$LEVEL]}"; FREQ=30 ;;
 esac
 
+[ -n "$PULSE_FREQ" ] && FREQ="$PULSE_FREQ"
 FLOW_DRAW=on
 [ "$WATTS" -le 0 ] && FLOW_DRAW=off
 
-sketchybar --set "$NAME" icon="$ICON" icon.color="$LEVEL_COLOR" label="${PCT}%" update_freq="$FREQ" \
+sketchybar --set "$NAME" icon="$ICON" icon.color="$LEVEL_COLOR" label="${PCT}%" label.color="$LEVEL_COLOR" update_freq="$FREQ" \
            --set power_flow drawing="$FLOW_DRAW" icon="${WATTS}W" icon.color="$FLOW_COLOR" \
                  label="${FRAMES[$TICK]}" label.color="$FLOW_COLOR"
 # Popup (tyler-os #1419): redrawn on this tick only while it is open.
