@@ -54,14 +54,14 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 inner.horizontal = 8
 inner.vertical = 8
 # Desktop rails (tyler-os #1421/#1422) sit on the menu bar screen only: left agents rail 64 wide,
-# right files rail 232 wide (coach/rails_overlay.swift LEFT_W / TKOS_RAILS_WIDTH). Main monitor = rail + 16.
+# right files rail 278 wide (coach/rails_overlay.swift LEFT_W / TKOS_RAILS_WIDTH, tyler-os #1506). Main monitor = rail + 16.
 outer.left = [{ monitor.main = 80 }, 16]
 # Bottom ticker is 84 tall at screen y=0 (coach/ticker_overlay.swift HEIGHT), the skyline
 # stage sits on it (36, coach/scene_overlay.swift TKOS_SCENE_STRIP, tyler-os #1449): 84 + 36 + 8
 outer.bottom = 128
 # SketchyBar y_offset 6 + height 36 = 42, + 16
 outer.top = 58
-outer.right = [{ monitor.main = 248 }, 16]
+outer.right = [{ monitor.main = 294 }, 16]
 
 [mode.main.binding]
 
