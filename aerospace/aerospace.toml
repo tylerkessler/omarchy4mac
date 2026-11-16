@@ -45,23 +45,22 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 5 = ['built-in', '\(2\)$', '\(1\)$']      # music   → laptop, else right, else left
 
 [gaps]
-# Window edge margin = how far the SketchyBar pills sit from the screen edge.
-# Measured on a 2x screenshot: the right pill's outer edge is 13.5 pt from the
-# screen edge. Windows draw their border about 2.5 pt outside the tiled frame,
-# so the frame inset is 13.5 + 2.5 = 16 and the visible window edge lines up
-# with the pill edge. (Bar margin 10 + padding 8 + item 4 = 22 on paper, but the
-# pill is drawn inside that; the screenshot wins.)
+# ONE GAP (tyler-os #1523): inner.horizontal is the desktop's shared gap, 8 pt. Every surface reads it from
+# here: SketchyBar (bar margin + pill spacing), the rails and the flow board (coach/rails_overlay.swift,
+# coach/flow_overlay.swift), the fullscreen guard (dotfiles/hammerspoon/fullscreen_guard.lua). Change it here only;
+# the outer values below are sums of it and must be updated with it (tyler-os coach/test_one_gap.py checks them).
 inner.horizontal = 8
 inner.vertical = 8
-# Desktop rails (tyler-os #1421/#1422) sit on the menu bar screen only: left agents rail 64 wide,
-# right files rail 278 wide (coach/rails_overlay.swift LEFT_W / TKOS_RAILS_WIDTH, tyler-os #1506). Main monitor = rail + 16.
-outer.left = [{ monitor.main = 80 }, 16]
-# Bottom ticker is 84 tall at screen y=0 (coach/ticker_overlay.swift HEIGHT), the skyline
-# stage sits on it (36, coach/scene_overlay.swift TKOS_SCENE_STRIP, tyler-os #1449): 84 + 36 + 8
-outer.bottom = 128
-# SketchyBar y_offset 6 + height 36 = 42, + 16
-outer.top = 58
-outer.right = [{ monitor.main = 294 }, 16]
+# Desktop rails sit on the menu bar screen only, one gap from the screen edge: left agents rail 64 wide,
+# right files rail 278 wide (coach/rails_overlay.swift LEFT_W / TKOS_RAILS_WIDTH, tyler-os #1506).
+# Main monitor = gap + rail + gap: 8 + 64 + 8 = 80 and 8 + 278 + 8 = 294. Other monitors = the gap.
+outer.left = [{ monitor.main = 80 }, 8]
+outer.right = [{ monitor.main = 294 }, 8]
+# Bottom ticker is 84 tall at screen y=0 (coach/ticker_overlay.swift HEIGHT): 84 + 8. The 36 pt skyline stage
+# reservation is gone with the scene overlay (disabled), it was the dead band above the scroller.
+outer.bottom = 92
+# SketchyBar y_offset 6 + height 36 = 42, + 8
+outer.top = 50
 
 [mode.main.binding]
 

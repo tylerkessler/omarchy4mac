@@ -9,6 +9,10 @@ source "$CONFIG_DIR/lib/pill_item.sh"
 source "$CONFIG_DIR/pill.sh"   # one pill design for every island (tyler-os #1381)
 
 # ---------- Bar ----------
+# ONE GAP (tyler-os #1523): the desktop's shared gap lives in aerospace.toml (inner.horizontal). The pills sit one
+# gap from the screen edge (bar margin, no bar padding) and one gap apart (item padding half a gap each side).
+GAP=$(awk -F= '/^inner\.horizontal/{gsub(/[^0-9]/,"",$2); print $2; exit}' "$HOME/.aerospace.toml" 2>/dev/null)
+GAP=${GAP:-8}
 # Invisible strip. The rounded pills (brackets below) are the chrome.
 # No full-width fill, no pink rectangle, no bar shadow.
 # show_in_fullscreen=on: =off follows the auto-hiding menu bar and flickers on app switches. Hammerspoon
@@ -17,14 +21,14 @@ sketchybar --bar \
   position=top \
   height=36 \
   y_offset=6 \
-  margin=8 \
+  margin=$GAP \
   blur_radius=0 \
   color=0x00000000 \
   border_color=0x00000000 \
   border_width=0 \
   corner_radius=0 \
-  padding_left=8 \
-  padding_right=8 \
+  padding_left=0 \
+  padding_right=0 \
   notch_width=200 \
   display=all \
   topmost=on \
@@ -34,8 +38,8 @@ sketchybar --bar \
 
 # ---------- Defaults ----------
 default=(
-  padding_left=4
-  padding_right=4
+  padding_left=$((GAP / 2))
+  padding_right=$((GAP / 2))
   icon.font="Hack Nerd Font:Bold:14.0"
   label.font="Hack Nerd Font:Bold:13.0"
   icon.color="$FG"
@@ -98,7 +102,7 @@ sketchybar --move keys after tk
 
 # Gap between Claudia and the desktop pill, the same 8 as music_gap: without it the pill's outline touches her badge (tyler-os #1436).
 sketchybar --add item left_gap left \
-           --set left_gap width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
+           --set left_gap width=$GAP padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
 
 # ---------- AeroSpace workspace: one digit, the focused desktop (tyler-os #1161) ----------
 # Just the number, no chip or circle: drawn halfway between the desktop's sunset step and white, semi-transparent, so the bar
@@ -140,7 +144,7 @@ sketchybar --add item front_app left \
 # bracket backgrounds touch and their borders merge into one blob.
 sketchybar --add item music_gap left \
            --set music_gap \
-                 width=8 \
+                 width=$GAP \
                  padding_left=0 \
                  padding_right=0 \
                  icon.drawing=off \
@@ -423,7 +427,7 @@ sketchybar --add item agents right \
 # mouse leaving closes it, and only one is open at a time (plugins/popup.sh). Rows are drawn by lib/popups.py, and only while open.
 # The popup row names are cpu.rN / music_pop.rN / battery.rN; music_pop.art is the album cover.
 
-sketchybar --add item cpu_gap right --set cpu_gap width=8 padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
+sketchybar --add item cpu_gap right --set cpu_gap width=$GAP padding_left=0 padding_right=0 icon.drawing=off label.drawing=off background.drawing=off
 # One pill, seven segments (right to left: watts `cpu_w`, GPU value `cpu`, GPU label, RAM value, RAM label, CPU value, CPU label + icon) so each number can
 # wear its own status colour; labels stay white. The bracket `cpu_pill` is the outline and follows the worst of the three (popups.py cpu-tick).
 # The popup hangs off `cpu` (the rightmost segment, same spot as before); a click on any segment toggles it.
