@@ -17,7 +17,7 @@ sketchybar --bar \
   position=top \
   height=36 \
   y_offset=6 \
-  margin=10 \
+  margin=8 \
   blur_radius=0 \
   color=0x00000000 \
   border_color=0x00000000 \
@@ -351,7 +351,7 @@ sketchybar --add item standup_center center \
 
 # v4 bar order, left to right: agents · power. (Wi-Fi, Bluetooth, volume and theme hidden by choice.)
 # Right items lay out right-to-left in add order, so battery goes first.
-sketchybar --add item battery right \
+sketchybar --add item battery center \
            --set battery \
                  update_freq=2 \
                  icon.font="Hack Nerd Font:Bold:16.0" \
@@ -359,13 +359,13 @@ sketchybar --add item battery right \
                  label.color="$FG" \
                  script="$PLUGIN_DIR/battery.sh" \
                  click_script="$PLUGIN_DIR/popup.sh toggle battery" \
-                 popup.align=right \
+                 popup.align=center \
                  $(popup_args "${GRAD_6:-$SUN_4}") \
            --subscribe battery system_woke power_source_change mouse.exited.global
 
 # Power flow, just left of the battery: watts + a dot travelling into the battery (charging) or out of it (on battery).
 # battery.sh fills it; a click opens the same terminal as the battery.
-sketchybar --add item power_flow right \
+sketchybar --add item power_flow center \
            --set power_flow \
                  drawing=off \
                  icon.font="Hack Nerd Font:Bold:12.0" \
@@ -468,7 +468,12 @@ sketchybar --add bracket vibe_music spotify spotify_play spotify_next spotify_st
 sketchybar --add bracket vibe_center clock weather standup_center \
            --set vibe_center $(pill_args "${GRAD_4:-$SUN_3}")
 
-sketchybar --add bracket vibe_right agents clock_right standup power_flow battery \
+# Battery island, centred on its own (tyler-os #1527): watts flow + battery, gold hairline like the right island had.
+sketchybar --add bracket vibe_batt power_flow battery \
+           --set vibe_batt $(pill_args "${GRAD_6:-$SUN_4}")
+sketchybar --move power_flow before battery
+
+sketchybar --add bracket vibe_right agents clock_right standup \
            --set vibe_right $(pill_args "${GRAD_6:-$SUN_4}")
 
 # ---------- Fit guard (tyler-os #1440): left and right never overlap ----------
