@@ -10,11 +10,11 @@ PILL_BORDER=2
 
 # pill_args ACCENT -> the sketchybar properties of one pill. ACCENT is a 0xAARRGGBB colour; empty = quiet outline.
 pill_args() {
-  local c="$1"
-  printf 'background.color=%s background.corner_radius=%s background.height=%s background.border_width=%s ' \
-    "${PLUM:-$BG_PILL}" "$PILL_RADIUS" "$PILL_HEIGHT" "$PILL_BORDER"
-  printf 'background.shadow.drawing=off '
-  printf 'background.border_color=%s' "${c:-$OVERLAY}"
+  # Clean bar (tyler-os docs/DESIGN.md, Sunset Royal 2026-11-16): no pill, no border, no fill. The accent moves onto the
+  # icon and text instead, like the sun, TK and the keyboard glyph. Popups keep their outline (popup_args).
+  local c="${1:-$OVERLAY}"
+  printf 'background.drawing=off background.border_width=0 background.shadow.drawing=off '
+  printf 'icon.color=%s label.color=%s' "$c" "$c"
 }
 
 # popup_args ACCENT -> the properties of a popup panel under a pill (same plum fill, accent outline, no shadow; tyler-os #1419).

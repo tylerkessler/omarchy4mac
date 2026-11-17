@@ -75,6 +75,18 @@ sketchybar --add item logo left \
                  click_script="/opt/homebrew/bin/hs -c 'omarchyMenu()'" \
            --subscribe logo system_woke
 
+# ---------- Starred, top left: the rails' Gmail-style stars (tyler-os docs/DESIGN.md, Rails). Click = the starred list. ----------
+# The right rail writes ~/.config/tkos/starred.json and fires tkos_stars; plugins/stars.sh paints the count and the popup.
+sketchybar --add event tkos_stars \
+           --add item stars left \
+           --set stars icon="" icon.color=0xffffca00 icon.font="GeistMono NF:Bold:14.0" \
+                 icon.padding_left=10 icon.padding_right=6 \
+                 label.font="GeistMono NF:Bold:13.0" label.color=0xffffe9a3 label.padding_right=10 \
+                 $(pill_args 0xffffca00) $(popup_args 0xffffca00) \
+                 script="$PLUGIN_DIR/stars.sh" \
+                 click_script="sketchybar --set stars popup.drawing=toggle" \
+           --subscribe stars tkos_stars system_woke mouse.exited.global
+
 # ---------- TK monogram, right of the logo: colour = the TK OS favicon's status tone (tyler-os #1418) ----------
 # agent_status.sh (run by the agents item) repaints it only when the tone changes. Click = TKOS shortcuts in KeySheet.
 sketchybar --add item tk left \
@@ -99,6 +111,9 @@ sketchybar --move tk after logo
 # ---------- Keyboard logo, right after TK (left order: logo, TK, Keyboard, Claudia, desktop, app, Spotify; tyler-os #1437) ----------
 source "$CONFIG_DIR/items/keys.sh"
 sketchybar --move keys after tk
+# Messages + Outlook glyphs after the keyboard, before Claudia (items/apps.sh, 2026-11-16)
+source "$CONFIG_DIR/items/apps.sh"
+sketchybar --move msgs after keys --move outlook after msgs
 
 # Gap between Claudia and the desktop pill, the same 8 as music_gap: without it the pill's outline touches her badge (tyler-os #1436).
 sketchybar --add item left_gap left \
@@ -258,21 +273,7 @@ sketchybar --add item music_pop.art popup.music_pop \
                  background.height=150 background.image.scale=0.5 background.image.drawing=off background.color=0x00000000
 popup_rows music_pop 8
 
-# ---------- YouTube pill: only while a YouTube video is open in Brave (tyler-os #1381). Sunset magenta, no brand red (#1425) ----------
-# Shared pill look (lib/pill_item.sh): white logo and title, the gradient's magenta, as long as the title (static, cut with an ellipsis), condenses
-# while the computer-use banner is on. plugins/youtube.sh reads Brave's window titles from AeroSpace on front-app and wake events plus a 15 s backstop.
-sketchybar --add item youtube left \
-           --set youtube \
-                 drawing=off \
-                 icon="" \
-                 label.width=0 \
-                 label.max_chars=40 \
-                 update_freq=15 \
-                 updates=on \
-                 script="$PLUGIN_DIR/youtube.sh" \
-                 click_script="open -a 'Brave Browser'" \
-                 $(pill_item_args "${GRAD_4:-$ACCENT}") \
-           --subscribe youtube front_app_switched system_woke
+# YouTube pill removed (tyler-os Sunset Royal, 2026-11-16): the right rail's video dock holds the video, paused when not playing.
 
 # ---------- Touch grass pill: 2+ hours of active use without a 10-minute break (tyler-os #1381) ----------
 # Ticks every 60 s on HID idle time. Click = snooze 15 minutes; a real break clears it.
@@ -503,7 +504,6 @@ FRONT_APP="$(/usr/bin/perl -e 'alarm 2; exec @ARGV' /usr/bin/osascript -e 'tell 
 NAME=front_app SENDER=front_app_switched INFO="$FRONT_APP" bash "$PLUGIN_DIR/front_app.sh"
 
 # Prime the YouTube pill on startup
-NAME=youtube bash "$PLUGIN_DIR/youtube.sh"
 
 # Prime the Spotify pill on startup (forget the remembered width: a fresh item has none to animate from)
 rm -f "$HOME/.cache/omarchy4mac/spotify_pill.json"

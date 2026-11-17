@@ -426,7 +426,8 @@ def red_alert() -> int:
         up = not up
         time.sleep(ALERT_HALF)
     levels = read_levels() or {}
-    sb("--set", "cpu_pill", f"background.border_color={LEVEL_COLORS[max(levels.values(), default=0)]}", "background.color=" + C["PLUM"])
+    # Clean bar (tyler-os docs/DESIGN.md, 2026-11-16): no fill or border at rest; only a real CPU alert pulses (above).
+    sb("--set", "cpu_pill", "background.border_width=0", "background.color=0x00000000")
     return 0
 
 
