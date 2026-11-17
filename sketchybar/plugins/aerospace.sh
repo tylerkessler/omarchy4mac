@@ -8,19 +8,22 @@ source "$CONFIG_DIR/colors.sh"
 FOCUSED="${FOCUSED_WORKSPACE:-$(/usr/bin/perl -e 'alarm 1; exec @ARGV' /opt/homebrew/bin/aerospace list-workspaces --focused 2>/dev/null)}"
 
 # Ctrl+Left/Right switches native macOS Spaces, which AeroSpace never reports.
-# space_change carries the new Space number in $INFO ({"display-1": 2}, per display).
 # Native Space 1 is where AeroSpace lives (and what SketchyBar reports at every reload), so keep AeroSpace's answer there.
-# space_change also fires on screenshots with the *current* Space, not a new one (tyler-os #1337): when the native
-# number matches the last one seen nothing moved, so the digit already on the bar stays.
+# space_change's own $INFO lies here: a screenshot sends {"display-1": 2} and then 1 while the Mac never left Space 1
+# (tyler-os #1337), so ask the window server which Space is active (lib/native_space.py, 1 s limit). If it cannot say,
+# keep the digit. A repeat of the last native number means nothing moved, so the digit stays too.
 if [ "$SENDER" = "space_change" ]; then
-  NATIVE="$(printf '%s' "$INFO" | sed -n 's/.*"display-[0-9]*"[^0-9]*\([0-9][0-9]*\).*/\1/p' | head -1)"
+  if [ -n "$NATIVE_SPACE_CMD" ]; then
+    NATIVE="$($NATIVE_SPACE_CMD 2>/dev/null)"
+  else
+    NATIVE="$(/usr/bin/perl -e 'alarm 1; exec @ARGV' /usr/bin/python3 -I "$CONFIG_DIR/lib/native_space.py" 2>/dev/null)"
+  fi
+  [ -n "$NATIVE" ] || exit 0
   LAST_FILE="${SPACE_STATE_FILE:-${TMPDIR:-/tmp}/sketchybar_native_space}"
   LAST="$(cat "$LAST_FILE" 2>/dev/null)"
-  if [ -n "$NATIVE" ]; then
-    printf '%s' "$NATIVE" > "$LAST_FILE"
-    [ "$NATIVE" = "$LAST" ] && exit 0
-    [ "$NATIVE" != "1" ] && FOCUSED="$NATIVE"
-  fi
+  printf '%s' "$NATIVE" > "$LAST_FILE"
+  [ "$NATIVE" = "$LAST" ] && exit 0
+  [ "$NATIVE" != "1" ] && FOCUSED="$NATIVE"
 fi
 [ -n "$FOCUSED" ] || exit 0
 
