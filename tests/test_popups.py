@@ -107,6 +107,20 @@ class MusicTest(unittest.TestCase):
         self.assertFalse(any(t.strip() in ("Previous", "Pause", "Play", "Next") for t in text))
         self.assertTrue(any("controls off" in t for t in text))
 
+    def test_up_next_and_jukebox_rows(self):
+        q = [{"uri": "spotify:track:a", "name": "Next One", "artist": "X"}, {"uri": "spotify:track:b", "name": "Two", "artist": "Y"},
+             {"uri": "spotify:track:c", "name": "Three", "artist": "Z"}, {"uri": "spotify:track:d", "name": "Four", "artist": "W"}]
+        text = [t for t, _ in p.music_rows(self.S, 100.0, "1", q)]
+        self.assertEqual([t for t in text if t.startswith("↳ ")], ["↳ Next One · X", "↳ Two · Y", "↳ Three · Z"])
+        self.assertEqual(text[-1], p.JUKEBOX_ROW)
+        self.assertLessEqual(len(text), p.MUSIC_ROWS)
+
+    def test_jukebox_row_when_idle_but_not_on_fire(self):
+        self.assertEqual(p.music_rows({"state": "idle"}, 0)[-1][0], p.JUKEBOX_ROW)
+        fire = [t for t, _ in p.music_rows({**self.S, "device": "Yuri's Fire"}, 100.0, "?", [{"uri": "u", "name": "n", "artist": "a"}])]
+        self.assertNotIn(p.JUKEBOX_ROW, fire)
+        self.assertFalse(any(t.startswith("↳ ") for t in fire))
+
     def test_not_connected_and_idle(self):
         self.assertEqual(p.music_rows({"state": "nologin"}, 0)[0][0], "Spotify is not connected")
         self.assertEqual(p.music_rows({"state": "idle"}, 0)[0][0], "Nothing playing")

@@ -41,7 +41,9 @@ LEVEL_COLORS = (OK, WARN, CRIT)
 THRESHOLDS = {"cpu": (60, 85), "gpu": (60, 85), "ram": (70, 88)}
 HYSTERESIS = 3                                     # points a value must fall below a threshold before the colour steps back down
 FIRE = re.compile(r"fire|kindle|yuri|amazon|echo", re.I)   # devices that are never ours to control
-CPU_ROWS, MUSIC_ROWS, BATT_ROWS = 15, 8, 8
+CPU_ROWS, MUSIC_ROWS, BATT_ROWS = 15, 12, 8
+UPNEXT_ROWS = 3                                    # songs from the queue under the controls (Spotify Jukebox, tyler-os #1587)
+JUKEBOX_ROW = "♫ Jukebox: search any song"
 
 
 def run(cmd: list[str], timeout: float = 4) -> str:
@@ -236,12 +238,13 @@ def progress_bar(pos_ms: float, dur_ms: float, width: int = 20) -> str:
     return "▰" * full + "▱" * (width - full)
 
 
-def music_rows(s: dict | None, now: float, star: str = "?") -> list[tuple[str, str]]:
-    """Rows for the music popup. s = the last /me/player sample {'state','name','artist','device','pos_ms','dur_ms','at'} or None."""
+def music_rows(s: dict | None, now: float, star: str = "?", upnext: list | None = None) -> list[tuple[str, str]]:
+    """Rows for the music popup. s = the last /me/player sample {'state','name','artist','device','pos_ms','dur_ms','at'} or None.
+    upnext = the next songs in the queue [{'uri','name','artist'}]; they and the Jukebox row (tyler-os #1587) close the list."""
     if not s or s.get("state") in ("nologin", "relogin"):
         return [("Spotify is not connected", WHITE), ("Run: tyler spotify login", DIM)]
     if not s.get("name"):
-        return [("Nothing playing", WHITE), ("Start Spotify on a device", DIM)]
+        return [("Nothing playing", WHITE), ("Start Spotify on a device", DIM), (JUKEBOX_ROW, GREEN)]
     pos = s.get("pos_ms", 0) + ((now - s.get("at", now)) * 1000 if s.get("state") == "playing" else 0)
     locked = bool(FIRE.search(s.get("device", "")))
     rows = [(s["name"][:34], WHITE), (s.get("artist", "")[:34], DIM),
@@ -254,6 +257,10 @@ def music_rows(s: dict | None, now: float, star: str = "?") -> list[tuple[str, s
         rows.append(("  Pause" if s.get("state") == "playing" else "  Play", WHITE))
         rows.append(("  Next", WHITE))
     rows.append((("★ Saved to Library" if star == "1" else "☆ Save to Library") if star in ("0", "1") else "☆ Save to Library", AMBER if star == "1" else WHITE))
+    if not locked:
+        for u in (upnext or [])[:UPNEXT_ROWS]:
+            rows.append((f"↳ {u.get('name', '')} · {u.get('artist', '')}"[:36], DIM))
+        rows.append((JUKEBOX_ROW, GREEN))
     return rows
 
 
@@ -561,8 +568,34 @@ def art_path(url: str) -> str:
     return str(p)
 
 
+UPNEXT = CACHE / "music_upnext.json"
+
+
+def upnext(force: bool = False) -> list:
+    """The next songs in the queue, asked when the popup opens or a control was clicked, reused for 20 s by the 2 s ticks."""
+    fake = os.environ.get("TKOS_MUSIC_FAKE")
+    if fake:
+        return json.loads(Path(fake).read_text()).get("upnext", [])
+    try:
+        u = json.loads(UPNEXT.read_text())
+        if not force and time.time() - u.get("at", 0) < 20:
+            return u["songs"]
+    except Exception:
+        pass
+    sys.path.insert(0, str(LIB))
+    try:
+        import jukebox  # type: ignore  tyler-os coach/jukebox.py
+        songs = jukebox.upnext(UPNEXT_ROWS)
+    except Exception:
+        songs = []
+    CACHE.mkdir(parents=True, exist_ok=True)
+    UPNEXT.write_text(json.dumps({"at": time.time(), "songs": songs}))
+    return songs
+
+
 def fill_music(force: bool = False) -> None:
     s = sample(force)
+    queue = upnext(force) if s and s.get("name") and not FIRE.search(s.get("device", "")) else []
     star = "?"
     sl = spotify() if s and s.get("id") and not os.environ.get("TKOS_MUSIC_FAKE") else None
     if sl:
@@ -570,7 +603,7 @@ def fill_music(force: bool = False) -> None:
         star = "1" if c else "0" if c is False else "?"
     elif s and os.environ.get("TKOS_MUSIC_FAKE"):
         star = str(s.get("saved", "?"))
-    rows = music_rows(s, time.time(), star)
+    rows = music_rows(s, time.time(), star, queue)
     art = art_path((s or {}).get("art", "")) if s and s.get("name") else ""
     if art:
         sb("--set", "music_pop.art", "drawing=on", f"background.image={art}", "background.image.drawing=on")
@@ -578,11 +611,17 @@ def fill_music(force: bool = False) -> None:
         sb("--set", "music_pop.art", "drawing=off")
     draw("music_pop", rows, MUSIC_ROWS)
     # row indexes of the controls shift with the row count; click scripts are rebound to match
+    me = Path(__file__).resolve()
+    songs = iter(queue)
     for i, (text, _) in enumerate(rows, 1):
         act = {"  Previous": "prev", "  Pause": "playpause", "  Play": "playpause", "  Next": "next"}.get(text)
         if text.endswith("Save to Library") or text.startswith("★"):
             act = "star"
-        sb("--set", f"music_pop.r{i}", "click_script=" + (f"python3 {Path(__file__).resolve()} ctl {act}" if act else ""))
+        if text.startswith("↳ "):
+            act = "play " + next(songs, {}).get("uri", "")        # play that queued song now (speaker rule in jukebox.py)
+        if text == JUKEBOX_ROW:
+            act = "jukebox"
+        sb("--set", f"music_pop.r{i}", "click_script=" + (f"python3 {me} ctl {act}" if act else ""))
 
 
 def ctl(action: str) -> int:
@@ -592,6 +631,17 @@ def ctl(action: str) -> int:
         return 1
     if action == "star":
         sl.toggle()
+        fill_music(force=True)
+        return 0
+    if action == "jukebox":                                   # the search box lives in Hammerspoon (tyler-os #1587)
+        # close it the way popup.sh does: hidden, open file cleared, and the 2 s tick stopped
+        subprocess.run([SB, "--set", "music_pop", "popup.drawing=off", "update_freq=0"], capture_output=True)
+        OPEN_FILE.write_text("")
+        subprocess.Popen(["/usr/bin/python3", "-I", str(LIB / "jukebox.py"), "open"], start_new_session=True)
+        return 0
+    if action.startswith("play spotify:track:"):
+        subprocess.run(["/usr/bin/python3", "-I", str(LIB / "jukebox.py"), "play", action.split(" ", 1)[1]], capture_output=True, timeout=15)
+        time.sleep(0.4)
         fill_music(force=True)
         return 0
     s = sample(force=True)
@@ -613,13 +663,13 @@ def main(argv: list[str]) -> int:
     if cmd == "red-alert":
         return red_alert()
     if cmd == "fill" and len(argv) > 1:
-        {"cpu": fill_cpu, "battery": fill_battery, "music": lambda: fill_music(True)}.get(argv[1], lambda: None)()
+        {"cpu": fill_cpu, "battery": fill_battery, "music": lambda: fill_music(True), "music_pop": lambda: fill_music(True)}.get(argv[1], lambda: None)()
         return 0
     if cmd == "tick-music":
         fill_music()
         return 0
     if cmd == "ctl" and len(argv) > 1:
-        return ctl(argv[1])
+        return ctl(" ".join(argv[1:]))
     return 2
 
 

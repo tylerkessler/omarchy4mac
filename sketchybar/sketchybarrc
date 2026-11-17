@@ -271,7 +271,7 @@ sketchybar --add item music_pop left \
 sketchybar --add item music_pop.art popup.music_pop \
            --set music_pop.art drawing=off icon.drawing=off label.drawing=off width=340 \
                  background.height=150 background.image.scale=0.5 background.image.drawing=off background.color=0x00000000
-popup_rows music_pop 8
+popup_rows music_pop 12   # 7 controls + 3 up next + the Jukebox row (tyler-os #1587)
 
 # YouTube pill removed (tyler-os Sunset Royal, 2026-11-16): the right rail's video dock holds the video, paused when not playing.
 
