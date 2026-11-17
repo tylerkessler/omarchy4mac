@@ -19,6 +19,7 @@ import pillcalc  # noqa: E402
 HOME = Path.home()
 LIB = Path(os.environ.get("TKOS_SPOTIFY_LIB", HOME / "Scripts/tyler-os-live/coach/spotify_library.py"))
 STATE = Path(os.environ.get("TKOS_STATE_DIR", HOME / ".local/state/tyler-os-vault"))
+NOW = HOME / ".cache" / "omarchy4mac" / "spotify_now.json"            # what is playing, for the rail's alerts strip
 MEMORY = HOME / ".cache" / "omarchy4mac" / "spotify_pill.json"      # the last width, to animate from
 SB = os.environ.get("SKETCHYBAR", "/opt/homebrew/bin/sketchybar")
 
@@ -80,8 +81,16 @@ def main(argv: list[str]) -> int:
         prev = json.loads(MEMORY.read_text()).get("width")
     except Exception:
         prev = None
-    for args in commands(pl, prev):
-        run([SB] + args, timeout=5)
+    # The island lives in the alerts strip above the right rail now (tyler-os rails_data.alerts, 2026-11-17): the bar items stay
+    # hidden and the rail reads this file. commands() is kept for the day it moves back.
+    _ = prev
+    try:
+        import time
+        NOW.parent.mkdir(parents=True, exist_ok=True)
+        NOW.write_text(json.dumps({"text": pl.get("text", ""), "state": p.get("state", ""), "ts": time.time()}))
+    except OSError:
+        pass
+    run([SB] + [x for n in ("spotify", "spotify_play", "spotify_next", "spotify_star", "music_pop") for x in ("--set", n, "drawing=off")], timeout=5)
     try:
         MEMORY.parent.mkdir(parents=True, exist_ok=True)
         MEMORY.write_text(json.dumps({"width": pl["width"]}))
