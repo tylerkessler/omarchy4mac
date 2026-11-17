@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""Send every window to its home desktop, as the [[on-window-detected]] rules in aerospace.toml say (tyler-os #1625).
+
+AeroSpace only runs those rules for windows it sees appear. Windows macOS restores before AeroSpace is up after a reboot
+land on whatever desktop it shows first (4 on the laptop screen), so this sweeps them home.
+
+  aerospace-home              move every misplaced window home
+  aerospace-home --dry-run    say what would move
+  aerospace-home --audit      every window: app, desktop now, home, and apps that have no rule
+  aerospace-home --startup    AeroSpace's after-startup-command: wait for it to answer, sweep twice (late restored
+                              windows), show desktop 1 right after boot, push the desktop digit to SketchyBar
+
+First matching rule wins, like AeroSpace. A rule with no move-node-to-workspace (floats) leaves the window where it is.
+Reads if.app-id and if.window-title-regex-substring (case-insensitive, like AeroSpace); other if.* keys are ignored.
+"""
+import os
+import re
+import subprocess
+import sys
+import time
+
+AEROSPACE = os.environ.get("AEROSPACE_BIN", "/opt/homebrew/bin/aerospace")
+SKETCHYBAR = os.environ.get("SKETCHYBAR_BIN", "/opt/homebrew/bin/sketchybar")
+CONF = os.environ.get("AEROSPACE_CONF", os.path.expanduser("~/.aerospace.toml"))
+SEP = "\x1f"
+
+
+def parse_rules(text):
+    """[{app, title, workspace}] in file order; workspace is None for rules that do not move the window."""
+    rules = []
+    for block in re.split(r"^\[\[on-window-detected\]\]\s*$", text, flags=re.M)[1:]:
+        block = re.split(r"^\[", block, maxsplit=1, flags=re.M)[0]   # stop at the next table
+        app = re.search(r"^if\.app-id\s*=\s*'([^']+)'", block, re.M)
+        title = re.search(r"^if\.window-title-regex-substring\s*=\s*'([^']+)'", block, re.M)
+        run = re.search(r"^run\s*=\s*(.+)$", block, re.M)
+        ws = re.search(r"move-node-to-workspace\s+(\w+)", run.group(1)) if run else None
+        rules.append({"app": app.group(1) if app else None, "title": title.group(1) if title else None,
+                      "workspace": ws.group(1) if ws else None})
+    return rules
+
+
+def match(rules, app, title):
+    """The first rule that matches this window, or None."""
+    for r in rules:
+        if r["app"] is not None and r["app"] != app:
+            continue
+        if r["title"] is not None and not re.search(r["title"], title or "", re.I):
+            continue
+        if r["app"] is None and r["title"] is None:
+            continue
+        return r
+    return None
+
+
+def aero(*args, timeout=5):
+    try:
+        p = subprocess.run([AEROSPACE, *args], capture_output=True, text=True, timeout=timeout)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return p.stdout if p.returncode == 0 else None
+
+
+def windows():
+    fmt = SEP.join(["%{window-id}", "%{workspace}", "%{app-bundle-id}", "%{app-name}", "%{window-title}"])
+    out = aero("list-windows", "--all", "--format", fmt)
+    rows = []
+    for line in (out or "").splitlines():
+        parts = line.split(SEP)
+        if len(parts) == 5:
+            rows.append(dict(zip(["id", "workspace", "app", "name", "title"], parts)))
+    return rows
+
+
+def plan(rules, wins):
+    """[(window, home)] for every window that is not on its home desktop."""
+    moves = []
+    for w in wins:
+        r = match(rules, w["app"], w["title"])
+        if r and r["workspace"] and r["workspace"] != w["workspace"]:
+            moves.append((w, r["workspace"]))
+    return moves
+
+
+def sweep(rules, dry=False, quiet=False):
+    moves = plan(rules, windows())
+    for w, home in moves:
+        if not quiet:
+            print(f"{'would move' if dry else 'moved'} {w['name']} {w['workspace']} -> {home}")
+        if not dry:
+            aero("move-node-to-workspace", "--window-id", w["id"], home)
+    return moves
+
+
+def audit(rules):
+    wins = windows()
+    print(f"{'APP':<24} {'NOW':>3} {'HOME':>5}  STATUS")
+    for w in sorted(wins, key=lambda w: (w["workspace"], w["name"])):
+        r = match(rules, w["app"], w["title"])
+        home = (r["workspace"] or "float") if r else "-"
+        status = "no rule" if not r else ("ok" if home in ("float", w["workspace"]) else "misplaced")
+        print(f"{w['name'][:24]:<24} {w['workspace']:>3} {home:>5}  {status}")
+    focused = (aero("list-workspaces", "--focused") or "").strip()
+    print(f"focused desktop: {focused or '?'}")
+
+
+def push_bar():
+    ws = (aero("list-workspaces", "--focused") or "").strip()
+    if ws:
+        try:   # a busy SketchyBar at boot must not stop the second sweep
+            subprocess.run([SKETCHYBAR, "--trigger", "aerospace_workspace_change", f"FOCUSED_WORKSPACE={ws}"],
+                           capture_output=True, timeout=5)
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    return ws
+
+
+def booted_seconds_ago():
+    try:
+        out = subprocess.run(["/usr/sbin/sysctl", "-n", "kern.boottime"], capture_output=True, text=True).stdout
+        return time.time() - int(re.search(r"sec = (\d+)", out).group(1))
+    except (OSError, AttributeError, ValueError):
+        return 1e9
+
+
+def startup(rules):
+    for _ in range(60):                      # a booting Mac can keep AeroSpace busy for a while
+        if aero("list-workspaces", "--focused", timeout=3) is not None:
+            break
+        time.sleep(2)
+    time.sleep(3)
+    sweep(rules, quiet=True)
+    if booted_seconds_ago() < 600:           # fresh login: start on the terminal desktop, not 4
+        aero("workspace", "1")
+    push_bar()
+    time.sleep(30)                           # windows macOS restores late
+    sweep(rules, quiet=True)
+    push_bar()
+
+
+def main(argv):
+    try:
+        rules = parse_rules(open(CONF).read())
+    except OSError as e:
+        print(f"cannot read {CONF}: {e}", file=sys.stderr)
+        return 1
+    if "--audit" in argv:
+        audit(rules)
+    elif "--startup" in argv:
+        startup(rules)
+    else:
+        moves = sweep(rules, dry="--dry-run" in argv)
+        if not moves:
+            print("every window is home")
+        push_bar()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

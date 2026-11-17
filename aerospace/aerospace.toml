@@ -5,6 +5,11 @@
 # ~/Library/LaunchAgents/com.omarchy-mac.aerospace-keepalive.plist
 start-at-login = false
 
+# Windows macOS restores before AeroSpace is up skip [[on-window-detected]] and land on the first desktop it shows
+# (4 on the laptop screen). aerospace-home sends them home, shows desktop 1 after a fresh login and pushes the digit to
+# SketchyBar (tyler-os #1625). Runs once per AeroSpace start, not on reload-config.
+after-startup-command = ['exec-and-forget /bin/bash -c "$HOME/.local/bin/aerospace-home --startup >/dev/null 2>&1"']
+
 enable-normalization-flatten-containers = true
 enable-normalization-opposite-orientation-for-nested-containers = true
 
@@ -300,6 +305,19 @@ run = 'move-node-to-workspace 1'
 if.app-id = 'com.coderunnerapp.CodeRunner'
 run = 'move-node-to-workspace 1'
 
+# Homes added by the app audit (tyler-os #1625): installed apps that had no rule.
+[[on-window-detected]]
+if.app-id = 'com.sublimetext.4'   # Sublime Text
+run = ['layout tiling', 'move-node-to-workspace 1']
+
+[[on-window-detected]]
+if.app-id = 'com.google.antigravity'   # Antigravity
+run = ['layout tiling', 'move-node-to-workspace 1']
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.powershell'   # PowerShell
+run = ['layout tiling', 'move-node-to-workspace 1']
+
 # --- Desktop 2: Finder + browsers ---
 [[on-window-detected]]
 if.app-id = 'com.apple.finder'
@@ -316,6 +334,23 @@ run = ['layout tiling', 'move-node-to-workspace 2']
 
 [[on-window-detected]]
 if.app-id = 'com.apple.Safari'
+run = ['layout tiling', 'move-node-to-workspace 2']
+
+# Homes added by the app audit (tyler-os #1625): installed apps that had no rule.
+[[on-window-detected]]
+if.app-id = 'org.mozilla.firefox'   # Firefox
+run = ['layout tiling', 'move-node-to-workspace 2']
+
+[[on-window-detected]]
+if.app-id = 'com.brave.Browser.nightly'   # Brave Nightly
+run = ['layout tiling', 'move-node-to-workspace 2']
+
+[[on-window-detected]]
+if.app-id = 'io.raindrop.macapp'   # Raindrop.io
+run = ['layout tiling', 'move-node-to-workspace 2']
+
+[[on-window-detected]]
+if.app-id = 'cc.anybox.Anybox'   # Anybox
 run = ['layout tiling', 'move-node-to-workspace 2']
 
 # --- Desktop 3: AI chat ---
@@ -346,6 +381,11 @@ run = 'move-node-to-workspace 3'
 [[on-window-detected]]
 if.app-id = 'com.nousresearch.hermes'
 run = 'move-node-to-workspace 3'
+
+# Homes added by the app audit (tyler-os #1625): installed apps that had no rule.
+[[on-window-detected]]
+if.app-id = 'ai.elementlabs.lmstudio'   # LM Studio
+run = ['layout tiling', 'move-node-to-workspace 3']
 
 # --- Desktop 4: Messages / social / Teams / Slack ---
 [[on-window-detected]]
@@ -383,6 +423,23 @@ run = 'move-node-to-workspace 4'
 [[on-window-detected]]
 if.app-id = 'com.apple.FaceTime'
 run = 'move-node-to-workspace 4'
+
+# Homes added by the app audit (tyler-os #1625): installed apps that had no rule.
+[[on-window-detected]]
+if.app-id = 'com.apple.mobilephone'   # Phone
+run = ['layout tiling', 'move-node-to-workspace 4']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.AddressBook'   # Contacts
+run = ['layout tiling', 'move-node-to-workspace 4']
+
+[[on-window-detected]]
+if.app-id = 'maccatalyst.com.atebits.Tweetie2'   # Twitter
+run = ['layout tiling', 'move-node-to-workspace 4']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Safari.WebApp.D878FE56-0D15-4514-8003-8A27B8A749C4'   # X web app
+run = ['layout tiling', 'move-node-to-workspace 4']
 
 # --- Desktop 5: Email / Settings / Other / Config ---
 [[on-window-detected]]
@@ -433,6 +490,139 @@ run = 'move-node-to-workspace 5'
 if.app-id = 'com.culturedcode.ThingsMac'
 run = 'move-node-to-workspace 5'
 
+# Homes added by the app audit (tyler-os #1625): installed apps that had no rule.
+[[on-window-detected]]
+if.app-id = 'com.apple.Notes'   # Notes
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.reminders'   # Reminders
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.flexibits.fantastical2.mac'   # Fantastical
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.omnigroup.OmniFocus4'   # OmniFocus
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.agiletortoise.Drafts-OSX'   # Drafts
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'net.shinyfrog.bear'   # Bear
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.lukilabs.lukiapp'   # Craft
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.bloombuilt.dayone-mac'   # Day One
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.journal'   # Journal
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.ideasoncanvas.mindnode'   # MindNode
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.modelmakertools.simplemindmacstd'   # SimpleMind
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.ionicframework.up335358'   # Twos
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.streaksapp.streak'   # Streaks
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.tapity.hours'   # Hours
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.Excel'   # Microsoft Excel
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.FormaGrid.Airtable'   # Airtable
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Photos'   # Photos
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.podcasts'   # Podcasts
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.TV'   # TV
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.iBooksX'   # Books
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.westbridge.stremio5-mac'   # Stremio
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.news'   # News
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.stocks'   # Stocks
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.weather'   # Weather
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Maps'   # Maps
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.findmy'   # Find My
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Home'   # Home
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.shortcuts'   # Shortcuts
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Automator'   # Automator
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.AppStore'   # App Store
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.FontBook'   # Font Book
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.freeform'   # Freeform
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.globaldelight.Boom3DMAS'   # Boom 3D
+run = ['layout tiling', 'move-node-to-workspace 5']
+
 # --- Learned: written by the TKOS Pin popup (tyler-os dotfiles/hammerspoon/app_pinner.lua). Keep this line. ---
 
 # ================= END HARD DESKTOP RULES =================
@@ -456,6 +646,91 @@ run = 'layout floating'
 
 [[on-window-detected]]
 if.app-id = 'com.apple.ActivityMonitor'
+run = 'layout floating'
+
+# Utilities and settings panes (tyler-os #1625): float on whatever desktop you are on.
+[[on-window-detected]]
+if.app-id = 'com.logi.cp-dev-mgr'   # Logi Options+
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.logi.optionsplus'   # Logi Options+
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'org.pqrs.Karabiner-Elements.Settings'   # Karabiner-Elements
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.clock'   # Clock
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Dictionary'   # Dictionary
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Stickies'   # Stickies
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.nscoding.ColorPicker'   # Color Picker
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'app.soulver.appstore.mac'   # Soulver
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.QuickTimePlayerX'   # QuickTime Player
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.PhotoBooth'   # Photo Booth
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.ScreenContinuity'   # iPhone Mirroring
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Passwords'   # Passwords
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Image_Capture'   # Image Capture
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.macpaw.CleanMyMac-mas'   # CleanMyMac
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.daisydiskapp.DaisyDisk'   # DaisyDisk
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.arvistech.countdowntimerplus'   # Countdown Timer Plus
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.archiveutility'   # Archive Utility
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.DiskUtility'   # Disk Utility
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Console'   # Console
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.SystemProfiler'   # System Information
+run = 'layout floating'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Screenshot'   # Screenshot
 run = 'layout floating'
 
 # ---------- Floats ported from Omarchy ----------
