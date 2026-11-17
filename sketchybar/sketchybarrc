@@ -510,9 +510,9 @@ sketchybar --add item fit left \
 sketchybar --update
 # The digit needs AeroSpace's answer. Right after a reboot AeroSpace can take far longer than 1 s to reply (load 100+),
 # and a blank answer left the startup "1" up while AeroSpace showed 4 (tyler-os #1625). Ask in the background until it
-# answers (3 s per try, up to 2 min). AeroSpace's after-startup-command (aerospace-home --startup) pushes it too.
+# answers (3 s per try + 3 s pause, 20 tries, about 2 min). AeroSpace's after-startup-command (aerospace-home --startup) pushes it too.
 (
-  for _ in $(seq 40); do
+  for _ in $(seq 20); do
     WS="$(/usr/bin/perl -e 'alarm 3; exec @ARGV' /opt/homebrew/bin/aerospace list-workspaces --focused 2>/dev/null)"
     [ -n "$WS" ] && { sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE="$WS"; break; }
     sleep 3
