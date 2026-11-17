@@ -5,7 +5,7 @@
 
 options=(
   style=round                # round | square
-  width=5.0
+  width=1.5                  # 5 -> 2.5 -> 1.5 (2026-11-16); keep in step with sunset_border.lua M.WIDTH
   hidpi=on
   active_color=0x00000000    # clear: the focused border is six Sunset stops, drawn by tyler-os dotfiles/hammerspoon/sunset_border.lua (#1524)
   inactive_color=0x802a2a44  # Sunset overlay at 50%

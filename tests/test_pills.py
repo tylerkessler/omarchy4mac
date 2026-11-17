@@ -155,11 +155,13 @@ class ConfigTest(unittest.TestCase):
         def args(accent):
             cmd = f'CONFIG_DIR={ROOT}; PLUM=0xf0240f2e; OVERLAY=0xff2a2a44; . {ROOT}/pill.sh; pill_args "{accent}"'
             return subprocess.run(["bash", "-c", cmd], capture_output=True, text=True).stdout.split()
-        shape = lambda a: [x for x in a if not x.startswith(("background.border_color", "background.shadow.color"))]  # noqa: E731
+        # Clean bar (tyler-os docs/DESIGN.md, Sunset Royal 2026-11-16): no pill at all; the accent colours icon and text.
+        shape = lambda a: [x for x in a if not x.startswith(("icon.color", "label.color"))]  # noqa: E731
         self.assertEqual(shape(args("0xff1db954")), shape(args("0xff8b5cf6")))
-        self.assertIn("background.border_color=0xff1db954", args("0xff1db954"))
+        self.assertIn("background.drawing=off", args("0xff1db954"))
+        self.assertIn("background.border_width=0", args("0xff1db954"))
+        self.assertIn("label.color=0xff1db954", args("0xff1db954"))
         self.assertIn("background.shadow.drawing=off", args("0xff1db954"))   # no glow or shadow (#1418)
-        self.assertIn("background.corner_radius=14", args(""))
 
     def test_the_desktop_number_has_no_chip(self):
         rc = (ROOT / "sketchybarrc").read_text()

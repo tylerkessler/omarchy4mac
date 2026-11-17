@@ -658,7 +658,7 @@ end)
 -- TKOS modules from tyler-os (tab-dot tooltips, fullscreen guard, clipboard keep, top bar fullscreen, YouTube mini player,
 -- sunset border) are loaded by tkos-boot at login. A reload used to drop the top bar and mini player ones (tyler-os #1524).
 -- A Hammerspoon reload wipes them, so load them again here when they exist (tylerkessler/tyler-os#1104).
-for _, name in ipairs({ "tab_tooltips", "fullscreen_guard", "clipboard_keep", "top_bar_fullscreen", "youtube_mini", "sunset_border" }) do
+for _, name in ipairs({ "tab_tooltips", "fullscreen_guard", "clipboard_keep", "top_bar_fullscreen", "youtube_mini", "sunset_border", "app_pinner" }) do
   local path = os.getenv("HOME") .. "/Scripts/tyler-os-live/dotfiles/hammerspoon/" .. name .. ".lua"
   if hs.fs.attributes(path) then
     local ok, err = pcall(dofile, path)

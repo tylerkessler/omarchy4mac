@@ -38,11 +38,11 @@ exec-on-workspace-change = ['/bin/bash', '-c',
 [workspace-to-monitor-force-assignment]
 # Each workspace prefers its primary monitor but falls back through the chain
 # so it always has somewhere to display, even when some monitors are unplugged.
-1 = ['\(1\)$', '\(2\)$', 'built-in']      # browser → left, else right, else laptop
-2 = ['\(2\)$', '\(1\)$', 'built-in']      # Claude + Ghostty → right, else left, else laptop
-3 = ['\(2\)$', '\(1\)$', 'built-in']      # spare   → right, else left, else laptop
+1 = ['\(1\)$', '\(2\)$', 'built-in']      # terminal → left, else right, else laptop
+2 = ['\(2\)$', '\(1\)$', 'built-in']      # Finder + browsers → right, else left, else laptop
+3 = ['\(2\)$', '\(1\)$', 'built-in']      # AI chat → right, else left, else laptop
 4 = ['built-in', '\(2\)$', '\(1\)$']      # comms   → laptop, else right, else left
-5 = ['built-in', '\(2\)$', '\(1\)$']      # music   → laptop, else right, else left
+5 = ['built-in', '\(2\)$', '\(1\)$']      # email/settings/other → laptop, else right, else left
 
 [gaps]
 # ONE GAP (tyler-os #1523): inner.horizontal is the desktop's shared gap, 8 pt. Every surface reads it from
@@ -263,35 +263,187 @@ cmd-shift-down = ['join-with down', 'mode main']
 cmd-shift-up = ['join-with up', 'mode main']
 cmd-shift-right = ['join-with right', 'mode main']
 
-# Muse always opens on workspace 2, Ghostty on workspace 1 (tyler-os#1243)
-[[on-window-detected]]
-if.app-id = 'com.meta.endo'
-run = 'move-node-to-workspace 2'
+# ================= HARD DESKTOP RULES (Tyler, 2026-11-16) =================
+# 1 Terminal/dev | 2 Finder+browsers | 3 AI chat | 4 Comms | 5 Email/Settings/Other
+# AeroSpace runs only the FIRST matching rule: specific rules stay above generic ones.
+# Utilities (1Password, Raycast, Preview, Calculator, Activity Monitor, keysheet) float on whatever desktop you are on.
 
+# --- Desktop 1: Terminal / dev ---
+# Screensaver window floats (must sit above the Ghostty rule)
 [[on-window-detected]]
 if.app-id = 'com.mitchellh.ghostty'
+if.window-title-regex-substring = 'org.omarchy.screensaver'
+run = 'layout floating'
+
+# Ghostty native tabs are extra AX windows; keep tiled (ghostty.org/docs/help/macos-tiling-wms)
+[[on-window-detected]]
+if.app-id = 'com.mitchellh.ghostty'
+run = ['layout tiling', 'move-node-to-workspace 1']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Terminal'
 run = 'move-node-to-workspace 1'
 
-# Brave always opens on workspace 3 and goes fullscreen, same as Alt+F (tyler-os#1243)
+[[on-window-detected]]
+if.app-id = 'dev.warp.Warp-Stable'
+run = 'move-node-to-workspace 1'
+
+[[on-window-detected]]
+if.app-id = 'com.todesktop.230313mzl4w4u92'
+run = 'move-node-to-workspace 1'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.dt.Xcode'
+run = 'move-node-to-workspace 1'
+
+[[on-window-detected]]
+if.app-id = 'com.coderunnerapp.CodeRunner'
+run = 'move-node-to-workspace 1'
+
+# --- Desktop 2: Finder + browsers ---
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = ['layout tiling', 'move-node-to-workspace 2']   # tiles: fills the desktop, then splits (2026-11-16, was floating)
+
+# Brave tiles + fullscreens like Alt+F (tyler-os#1243). Brave --app PWAs (HEY, Chat, YouTube) land here too.
 [[on-window-detected]]
 if.app-id = 'com.brave.Browser'
-run = ['layout tiling', 'move-node-to-workspace 3', 'fullscreen']
+run = ['layout tiling', 'move-node-to-workspace 2', 'fullscreen']
 
-# Grok Bot launches at login: keep Desktop 1 clean, park it on workspace 2 (tyler-os#1243)
+[[on-window-detected]]
+if.app-id = 'com.google.Chrome'
+run = ['layout tiling', 'move-node-to-workspace 2']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Safari'
+run = ['layout tiling', 'move-node-to-workspace 2']
+
+# --- Desktop 3: AI chat ---
+[[on-window-detected]]
+if.app-id = 'com.anthropic.claudefordesktop'
+run = ['layout tiling', 'move-node-to-workspace 3', 'fullscreen']   # opens fullscreen like Brave (Tyler, 2026-11-16)
+
 [[on-window-detected]]
 if.app-id = 'com.anysphere.sand'
-run = 'move-node-to-workspace 2'
+run = 'move-node-to-workspace 3'
 
 [[on-window-detected]]
+if.app-id = 'com.openai.chat'
+run = 'move-node-to-workspace 3'
+
+[[on-window-detected]]
+if.app-id = 'com.meta.endo'
+run = 'move-node-to-workspace 3'
+
+[[on-window-detected]]
+if.app-id = 'com.openai.codex'
+run = 'move-node-to-workspace 3'
+
+[[on-window-detected]]
+if.app-id = 'com.t3tools.t3code'
+run = 'move-node-to-workspace 3'
+
+[[on-window-detected]]
+if.app-id = 'com.nousresearch.hermes'
+run = 'move-node-to-workspace 3'
+
+# --- Desktop 4: Messages / social / Teams / Slack ---
+[[on-window-detected]]
+if.app-id = 'com.apple.MobileSMS'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'net.whatsapp.WhatsApp'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'ru.keepcoder.Telegram'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'com.tinyspeck.slackmacgap'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.teams2'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'com.hnc.Discord'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'org.whispersystems.signal-desktop'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'us.zoom.xos'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.FaceTime'
+run = 'move-node-to-workspace 4'
+
+# --- Desktop 5: Email / Settings / Other / Config ---
+[[on-window-detected]]
 if.app-id = 'com.apple.systempreferences'
-run = 'layout floating'
+run = ['layout floating', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-id = 'com.apple.mail'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.microsoft.Outlook'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.stairways.keyboardmaestro.editor'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.spotify.client'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.Music'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'md.obsidian'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'abnerworks.Typora'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.busymac.busycal3'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.apple.iCal'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.todoist.mac.Todoist'
+run = 'move-node-to-workspace 5'
+
+[[on-window-detected]]
+if.app-id = 'com.culturedcode.ThingsMac'
+run = 'move-node-to-workspace 5'
+
+# --- Learned: written by the TKOS Pin popup (tyler-os dotfiles/hammerspoon/app_pinner.lua). Keep this line. ---
+
+# ================= END HARD DESKTOP RULES =================
 
 [[on-window-detected]]
 if.app-id = 'com.omarchy4mac.keysheet'
 run = 'layout floating'
 
+# TKOS popups and toasts (tyler-os tkos_ui.lua) are Hammerspoon windows: never tile them.
 [[on-window-detected]]
-if.app-id = 'com.apple.finder'
+if.app-id = 'org.hammerspoon.Hammerspoon'
 run = 'layout floating'
 
 [[on-window-detected]]
@@ -344,32 +496,8 @@ run = 'layout floating'
 if.window-title-regex-substring = 'Picture.in.Picture'
 run = 'layout floating'
 
-# ---------- No workspace auto-assignment (Omarchy 4 / Quattro) ----------
+# ---------- Upstream Omarchy note (overridden by HARD DESKTOP RULES above) ----------
 # Omarchy sends no app to a fixed workspace: a window opens on the workspace
 # you are on. The only exceptions are the rules above (floats) and the ones
 # below (browsers stay tiled, the screensaver floats).
 
-# Browsers are pinned to tiling, mirroring Omarchy's own rule
-# (default/hypr/apps/browser.lua: `o.window({ tag = "chromium-based-browser" },
-# { tile = true })`). Gaps only apply to tiled windows, and the macOS menu bar
-# is auto-hidden, so a floating browser is free to sit at y=0 with its tab
-# strip and window controls stranded behind SketchyBar.
-[[on-window-detected]]
-if.app-id = 'com.brave.Browser'
-run = 'layout tiling'
-
-[[on-window-detected]]
-if.app-id = 'com.google.Chrome'
-run = 'layout tiling'
-
-[[on-window-detected]]
-if.app-id = 'com.mitchellh.ghostty'
-if.window-title-regex-substring = 'org.omarchy.screensaver'
-run = 'layout floating'
-
-# Ghostty native tabs show up as extra AX windows. Ghostty's documented
-# AeroSpace workaround is to force tiling; floating them detaches the tab.
-# https://ghostty.org/docs/help/macos-tiling-wms
-[[on-window-detected]]
-if.app-id = 'com.mitchellh.ghostty'
-run = ['layout tiling']
