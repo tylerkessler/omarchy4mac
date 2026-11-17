@@ -113,7 +113,7 @@ source "$CONFIG_DIR/items/keys.sh"
 sketchybar --move keys after tk
 # Messages + Outlook glyphs after the keyboard, before Claudia (items/apps.sh, 2026-11-16)
 source "$CONFIG_DIR/items/apps.sh"
-sketchybar --move msgs after keys --move outlook after msgs
+sketchybar --move msgs after keys --move outlook after msgs --move vault after outlook --move digit after vault --move tkset after digit
 
 # Gap between Claudia and the desktop pill, the same 8 as music_gap: without it the pill's outline touches her badge (tyler-os #1436).
 sketchybar --add item left_gap left \
@@ -455,6 +455,20 @@ source "$CONFIG_DIR/items/agent_status.sh"
 # The CPU pill's outline, made after agent_status.sh so its LOAD segment sits inside it: no lone load dot (tyler-os #1425).
 sketchybar --add bracket cpu_pill load cpu_w cpu cpu_gl cpu_rv cpu_rl cpu_cv cpu_cl \
            --set cpu_pill $(pill_args "${GRAD_5:-$CYAN}")
+
+# System stats sit in the centre beside the battery (2026-11-17): one island, centred. The right side is for open apps.
+for n in load cpu_cl cpu_cv cpu_rl cpu_rv cpu_gl cpu cpu_w; do sketchybar --set "$n" position=center; done
+sketchybar --reorder load cpu_cl cpu_cv cpu_rl cpu_rv cpu_gl cpu cpu_w
+
+# ---------- Open apps, right side: every app with a window, as its icon (plugins/open_apps.sh) ----------
+for i in 0 1 2 3 4 5 6 7 8 9 10 11; do
+  sketchybar --add item "oapp.$i" right \
+             --set "oapp.$i" drawing=off icon.font="sketchybar-app-font:Regular:15.0" icon.padding_left=5 icon.padding_right=5 \
+                   label.drawing=off background.drawing=off padding_left=0 padding_right=0
+done
+sketchybar --add item oapps right \
+           --set oapps drawing=off updates=on update_freq=30 script="$PLUGIN_DIR/open_apps.sh" \
+           --subscribe oapps front_app_switched aerospace_workspace_change system_woke
 
 # ---------- Instruction files shaping the focused LLM session (tyler-os coach/session_md.py, issue #1285) ----------
 # Added after every other right-hand item, so they land in the empty stretch left of the agents pill. Hidden until an LLM tab is focused.

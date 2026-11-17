@@ -6,4 +6,6 @@ source "$CONFIG_DIR/lib/pill_item.sh"
 
 IDLE="$(/usr/sbin/ioreg -c IOHIDSystem | /usr/bin/awk '/HIDIdleTime/{print $NF; exit}')"
 IFS='|' read -r SHOW LABEL <<<"$(python3 "$CONFIG_DIR/lib/extras.py" grass "${IDLE:-0}")"
-if [ "$SHOW" = "1" ]; then pill_show "$NAME" "$LABEL"; else sketchybar --set "$NAME" drawing=off; fi
+# The nudge shows in the alerts strip above the right rail now (tyler-os rails_data.alerts, 2026-11-17). This item only keeps
+# the clock ticking, so it never draws.
+sketchybar --set "$NAME" drawing=off
