@@ -18,10 +18,10 @@ class DigitTest(unittest.TestCase):
         fake.chmod(0o755)
 
     def run_event(self, sender, native=None, aerospace="4"):
+        """native = the Space the window server says is active; SketchyBar's $INFO always says 2 and is ignored."""
         env = dict(os.environ, PATH=f"{self.tmp}:{os.environ['PATH']}", CONFIG_DIR=str(ROOT), NAME="space",
-                   SENDER=sender, FOCUSED_WORKSPACE=aerospace, SPACE_STATE_FILE=str(self.tmp / "native"))
-        if native is not None:
-            env["INFO"] = '{\n\t"display-1": %d\n}' % native
+                   SENDER=sender, FOCUSED_WORKSPACE=aerospace, SPACE_STATE_FILE=str(self.tmp / "native"),
+                   INFO='{\n\t"display-1": 2\n}', NATIVE_SPACE_CMD=f"echo {native if native is not None else ''}")
         subprocess.run(["bash", str(SCRIPT)], env=env, check=True)
 
     def digit(self):
@@ -44,6 +44,16 @@ class DigitTest(unittest.TestCase):
         self.assertEqual(self.digit(), "3")
         self.run_event("space_change", native=1, aerospace="5")    # back on Space 1 = AeroSpace's answer
         self.assertEqual(self.digit(), "5")
+
+    def test_screenshot_bounce_on_space_one_keeps_aerospace(self):
+        self.run_event("aerospace_workspace_change", aerospace="4")
+        self.run_event("space_change", native=1)                   # $INFO says 2, the window server says 1
+        self.assertEqual(self.digit(), "4")
+
+    def test_unknown_native_space_keeps_the_digit(self):
+        self.run_event("aerospace_workspace_change", aerospace="4")
+        self.run_event("space_change")                             # helper timed out or failed
+        self.assertEqual(self.digit(), "4")
 
     def test_reload_on_space_one_keeps_aerospace(self):
         self.run_event("space_change", native=1, aerospace="3")
