@@ -53,9 +53,9 @@ inner.horizontal = 8
 inner.vertical = 8
 # Desktop rails sit on the menu bar screen only, one gap from the screen edge: left agents rail 64 wide,
 # right files rail 278 wide (coach/rails_overlay.swift LEFT_W / TKOS_RAILS_WIDTH, tyler-os #1506).
-# Main monitor = gap + rail + gap: 8 + 64 + 8 = 80 and 8 + 278 + 8 = 294. Other monitors = the gap.
+# Main monitor = gap + rail + gap: 8 + 64 + 8 = 80 and 8 + 334 + 8 = 350 (right rail 20% wider, 2026-11-17). Other monitors = the gap.
 outer.left = [{ monitor.main = 80 }, 8]
-outer.right = [{ monitor.main = 294 }, 8]
+outer.right = [{ monitor.main = 350 }, 8]
 # Bottom ticker is 84 tall at screen y=0 (coach/ticker_overlay.swift HEIGHT): 84 + 8. The 36 pt skyline stage
 # reservation is gone with the scene overlay (disabled), it was the dead band above the scroller.
 outer.bottom = 92
