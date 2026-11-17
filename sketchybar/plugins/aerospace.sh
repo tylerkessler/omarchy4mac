@@ -14,7 +14,7 @@ FOCUSED="${FOCUSED_WORKSPACE:-$(/usr/bin/perl -e 'alarm 1; exec @ARGV' /opt/home
 # number matches the last one seen nothing moved, so the digit already on the bar stays.
 if [ "$SENDER" = "space_change" ]; then
   NATIVE="$(printf '%s' "$INFO" | sed -n 's/.*"display-[0-9]*"[^0-9]*\([0-9][0-9]*\).*/\1/p' | head -1)"
-  LAST_FILE="${TMPDIR:-/tmp}/sketchybar_native_space"
+  LAST_FILE="${SPACE_STATE_FILE:-${TMPDIR:-/tmp}/sketchybar_native_space}"
   LAST="$(cat "$LAST_FILE" 2>/dev/null)"
   if [ -n "$NATIVE" ]; then
     printf '%s' "$NATIVE" > "$LAST_FILE"

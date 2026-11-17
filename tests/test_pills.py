@@ -148,7 +148,7 @@ class ConfigTest(unittest.TestCase):
     def test_every_island_uses_the_one_pill_design(self):
         rc = (ROOT / "sketchybarrc").read_text()
         brackets = re.findall(r"--set (vibe_\w+) \$\(pill_args", rc)
-        self.assertEqual(set(brackets), {"vibe_left", "vibe_music", "vibe_center", "vibe_right"})
+        self.assertEqual(set(brackets), {"vibe_left", "vibe_music", "vibe_center", "vibe_right", "vibe_batt"})
         self.assertNotIn("_PILL=(", rc)
 
     def test_pill_args_gives_the_same_shape_to_every_accent(self):
