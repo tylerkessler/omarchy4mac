@@ -10,9 +10,17 @@ FOCUSED="${FOCUSED_WORKSPACE:-$(/usr/bin/perl -e 'alarm 1; exec @ARGV' /opt/home
 # Ctrl+Left/Right switches native macOS Spaces, which AeroSpace never reports.
 # space_change carries the new Space number in $INFO ({"display-1": 2}, per display).
 # Native Space 1 is where AeroSpace lives (and what SketchyBar reports at every reload), so keep AeroSpace's answer there.
+# space_change also fires on screenshots with the *current* Space, not a new one (tyler-os #1337): when the native
+# number matches the last one seen nothing moved, so the digit already on the bar stays.
 if [ "$SENDER" = "space_change" ]; then
   NATIVE="$(printf '%s' "$INFO" | sed -n 's/.*"display-[0-9]*"[^0-9]*\([0-9][0-9]*\).*/\1/p' | head -1)"
-  [ -n "$NATIVE" ] && [ "$NATIVE" != "1" ] && FOCUSED="$NATIVE"
+  LAST_FILE="${TMPDIR:-/tmp}/sketchybar_native_space"
+  LAST="$(cat "$LAST_FILE" 2>/dev/null)"
+  if [ -n "$NATIVE" ]; then
+    printf '%s' "$NATIVE" > "$LAST_FILE"
+    [ "$NATIVE" = "$LAST" ] && exit 0
+    [ "$NATIVE" != "1" ] && FOCUSED="$NATIVE"
+  fi
 fi
 [ -n "$FOCUSED" ] || exit 0
 
