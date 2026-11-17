@@ -634,7 +634,8 @@ def ctl(action: str) -> int:
         fill_music(force=True)
         return 0
     if action == "jukebox":                                   # the search box lives in Hammerspoon (tyler-os #1587)
-        subprocess.run([SB, "--set", "music_pop", "popup.drawing=off"], capture_output=True)
+        # close it the way popup.sh does: hidden, open file cleared, and the 2 s tick stopped
+        subprocess.run([SB, "--set", "music_pop", "popup.drawing=off", "update_freq=0"], capture_output=True)
         OPEN_FILE.write_text("")
         subprocess.Popen(["/usr/bin/python3", "-I", str(LIB / "jukebox.py"), "open"], start_new_session=True)
         return 0
