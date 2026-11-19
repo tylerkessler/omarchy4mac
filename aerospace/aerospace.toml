@@ -70,7 +70,7 @@ outer.top = 50
 [mode.main.binding]
 
 # ---------- Navigating ----------
-cmd-space = 'exec-and-forget open -a Raycast'
+# cmd-space is left free so Raycast owns it (set in Raycast Settings, tyler-os #1655)
 # cmd-alt-space → handled by Hammerspoon (Omarchy control menu)
 # theme switcher still available on cmd-ctrl-shift-space below
 cmd-ctrl-l = '''exec-and-forget osascript -e 'tell application "System Events" to keystroke "q" using {control down, command down}' '''
