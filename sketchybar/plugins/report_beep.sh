@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
-# Beep Now button (temporary, expires 2026-11-22 19:45). Click it right after a mystery beep: it reads the last 2 minutes
+# Capture Beep Source (Reporting menu). Run it right after a mystery beep: it reads the last 2 minutes
 # of macOS logs for whatever made a sound (Hey Siri wake-ups, speaker starts, system sounds, notification sounds, afplay/say)
-# and saves a report to ~/.local/state/tyler-os-vault/beep_reports. The label shows the verdict for 10 seconds.
-# Without "click" (the hourly tick) it only hides itself once it has expired.
-EXPIRES="2026-11-22 19:45"
-NAME="${NAME:-beep_now}"
-if [ "$(date '+%Y-%m-%d %H:%M')" \> "$EXPIRES" ]; then sketchybar --set "$NAME" drawing=off updates=off; exit 0; fi
-[ "$1" = "click" ] || exit 0
+# and saves a report to ~/.local/state/tyler-os-vault/beep_reports. The Reporting icon's label shows the verdict for 10 s.
+NAME="${NAME:-report}"
 
 DIR="$HOME/.local/state/tyler-os-vault/beep_reports"; mkdir -p "$DIR"
 STAMP="$(date '+%Y%m%d-%H%M%S')"; OUT="$DIR/$STAMP.txt"
