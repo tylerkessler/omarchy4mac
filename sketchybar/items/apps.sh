@@ -19,5 +19,6 @@ msgs||${GRAD_3:-0xffff6fa3}|open -a Messages
 outlook||${GRAD_5:-0xff9d7bff}|open -a 'Microsoft Outlook'
 vault||${GRAD_4:-0xffe066ff}|open 'obsidian://open?vault=Tyler%27s%20Vault'
 digit||${GRAD_1:-0xffff9a5c}|open http://127.0.0.1:8765/
+clear||0xff4cd964|/opt/homebrew/bin/hs -c 'TKOS_CLEAR_DOCK.toggle()'
 tkset||0xffe4d2ff|open http://127.0.0.1:8765/settings
 EOF
