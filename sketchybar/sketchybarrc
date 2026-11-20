@@ -405,17 +405,8 @@ sketchybar --add item standup right \
                  background.drawing=off \
                  script="$PLUGIN_DIR/standup.sh"
 
-# Beep Now (temporary, hides itself 2026-11-22 19:45): click right after a mystery beep to log what made it.
-sketchybar --add item beep_now right \\
-           --set beep_now \\
-                 icon="🔔" \\
-                 icon.color="$FG" \\
-                 label.drawing=off \\
-                 label.max_chars=40 \\
-                 background.drawing=off \\
-                 update_freq=3600 \\
-                 script="$PLUGIN_DIR/beep_now.sh" \\
-                 click_script="$PLUGIN_DIR/beep_now.sh click"
+# Reporting menu: three big log buttons, then Log and Diagnose and View lists (tyler-os coach/report_menu.py).
+"$PLUGIN_DIR/report_menu.sh" setup
 
 sketchybar --add item clock_right right \
            --set clock_right \

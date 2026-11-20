@@ -25,6 +25,7 @@ case "$1" in
     name="$2"
     if [ "$cur" = "$name" ]; then close_open; exit 0; fi
     close_open
+    "$SB" --set report popup.drawing=off --set report_list popup.drawing=off 2>/dev/null; : > "$HOME/.cache/omarchy4mac/report_open"   # one menu at a time
     /usr/bin/perl -e 'alarm 8; exec @ARGV' /usr/bin/python3 "$DIR/../lib/popups.py" fill "$name"
     printf '%s' "$name" > "$STATE"
     "$SB" --set "$name" popup.drawing=on
