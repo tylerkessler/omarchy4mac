@@ -665,3 +665,12 @@ for _, name in ipairs({ "tab_tooltips", "fullscreen_guard", "clipboard_keep", "t
     if not ok then print("TKOS module " .. name .. " failed: " .. tostring(err)) end
   end
 end
+
+-- Clear dock: Clear lists locked to the top of the right rail on every desktop, loads on lid open (clear_dock.lua).
+do
+  local path = os.getenv("HOME") .. "/.hammerspoon/clear_dock.lua"
+  if hs.fs.attributes(path) then
+    local ok, err = pcall(dofile, path)
+    if not ok then print("clear_dock failed: " .. tostring(err)) end
+  end
+end

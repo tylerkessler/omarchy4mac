@@ -34,7 +34,7 @@ on-focus-changed = [
 # Notify SketchyBar when workspace focus changes
 # Also leave the focused workspace in a file: the tyler-os skyline scene shows its full beach scene on desktop 2 (tyler-os #1449).
 exec-on-workspace-change = ['/bin/bash', '-c',
-  '/opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE; printf %s "$AEROSPACE_FOCUSED_WORKSPACE" > "$HOME/.local/state/tyler-os-vault/aerospace_workspace"']
+  '/opt/homebrew/bin/sketchybar --trigger aerospace_workspace_change FOCUSED_WORKSPACE=$AEROSPACE_FOCUSED_WORKSPACE; printf %s "$AEROSPACE_FOCUSED_WORKSPACE" > "$HOME/.local/state/tyler-os-vault/aerospace_workspace"; (/opt/homebrew/bin/hs -c "TKOS_CLEAR_DOCK and TKOS_CLEAR_DOCK.follow()" >/dev/null 2>&1 &)']
 
 # ---------- Pin workspaces to specific monitors ----------
 # VA2446 (2) sits on the right; VA2446 (1) sits on the left; laptop sits under
@@ -624,6 +624,61 @@ if.app-id = 'com.globaldelight.Boom3DMAS'   # Boom 3D
 run = ['layout tiling', 'move-node-to-workspace 5']
 
 # --- Learned: written by the TKOS Pin popup (tyler-os dotfiles/hammerspoon/app_pinner.lua). Keep this line. ---
+
+# Clear (pinned 2026-11-19)
+[[on-window-detected]]
+if.app-id = 'com.apple.Safari.WebApp.9964332B-A368-4B48-9F44-BA038F8D6CAA'
+run = 'layout floating'
+
+# The Lab(Beta) (pinned 2026-11-18)
+[[on-window-detected]]
+if.app-id = 'com.jlab.TheLabDesktopApp'
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+# Installer (pinned 2026-11-18)
+[[on-window-detected]]
+if.app-id = 'com.apple.installer'
+run = 'layout floating'
+
+# Ticket Viewer (pinned 2026-11-18)
+[[on-window-detected]]
+if.app-id = 'com.apple.Ticket-Viewer'
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+# Folder Actions Setup (pinned 2026-11-17)
+[[on-window-detected]]
+if.app-id = 'com.apple.FolderActionsSetup'
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+# CARROT (pinned 2026-11-17)
+[[on-window-detected]]
+if.app-id = 'com.grailr.CARROTweather'
+run = ['layout tiling', 'move-node-to-workspace 2']
+
+# Remind Faster (pinned 2026-11-17)
+[[on-window-detected]]
+if.app-id = 'chojubo.addReminder'
+run = 'layout floating'
+
+# Ollama (pinned 2026-11-17)
+[[on-window-detected]]
+if.app-id = 'com.electron.ollama'
+run = ['layout tiling', 'move-node-to-workspace 3']
+
+# Alfred Preferences (pinned 2026-11-17)
+[[on-window-detected]]
+if.app-id = 'com.runningwithcrayons.Alfred-Preferences'
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+# Tailscale (pinned 2026-11-17)
+[[on-window-detected]]
+if.app-id = 'io.tailscale.ipn.macsys'
+run = ['layout tiling', 'move-node-to-workspace 5']
+
+# Fair (pinned 2026-11-17)
+[[on-window-detected]]
+if.app-id = 'us.ultrasurf.fqcdn.ios'
+run = ['layout tiling', 'move-node-to-workspace 5']
 
 # ================= END HARD DESKTOP RULES =================
 
