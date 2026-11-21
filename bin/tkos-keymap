@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# TKOS shortcut page (Digit /shortcut, generated from the live keyboard config) as its own app-style Brave window.
+# Used by the SketchyBar ⌘ pill (left click) and Caps+? (tyler-os #1673, #1430, #1322). Reuses the window if it is open.
+set -u
+URL="${TKOS_SHORTCUT_URL:-http://127.0.0.1:8765/shortcut}"
+if ! curl -fsS -m 2 -o /dev/null "http://127.0.0.1:8765/healthz" 2>/dev/null && ! curl -fsS -m 2 -o /dev/null "$URL" 2>/dev/null; then
+  # Digit is down: fall back to the floating KeySheet so the key never does nothing
+  exec "$HOME/.local/bin/keysheet" "$@"
+fi
+if [ "${1:-}" = "--url" ]; then echo "$URL"; exit 0; fi
+exec open -na "Brave Browser" --args --app="$URL" >/dev/null 2>&1
