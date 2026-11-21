@@ -1,6 +1,12 @@
 # AeroSpace config — Omarchy bindings for macOS (cmd = Super)
 # Reload with: aerospace reload-config
 
+# Opt in to config-version 2. In version 1 AeroSpace inferred persistent-workspaces from the
+# workspace numbers used in the key bindings (1 to 5); version 2 starts empty, so they are spelled out
+# below to keep behavior the same (omarchy4mac #1672).
+config-version = 2
+persistent-workspaces = ['1', '2', '3', '4', '5']
+
 # Lifecycle (startup + relaunch-on-crash) is owned by the launchd watchdog:
 # ~/Library/LaunchAgents/com.omarchy-mac.aerospace-keepalive.plist
 start-at-login = false
